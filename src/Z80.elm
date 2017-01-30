@@ -90,7 +90,6 @@ type LoadByteTarget
 type LoadByteSource
     = FromByteRegister ByteRegister
     | FromMem WordRegister
-    | FromMemWordData
     | FromByteData ByteData
 
 
@@ -104,10 +103,9 @@ type LoadWordTarget
 {-| Sources for 16-bit `LD` instructions.
 -}
 type LoadWordSource
-    = SPPlusR8
-    | FromWordRegister WordRegister
+    = FromWordRegister WordRegister
     | FromWordData WordData
-    | FromSPByteData ByteData
+    | FromSPByteData
 
 
 {-| Sources for `LDH` instructions.
@@ -959,7 +957,7 @@ decode code =
             RST 0x30 @ 16
 
         0xF8 ->
-            LDW (IntoWordRegister HL) (FromSPByteData R8) @ 12
+            LDW (IntoWordRegister HL) FromSPByteData @ 12
 
         0xF9 ->
             LDW (IntoWordRegister SP) (FromWordRegister HL) @ 8
