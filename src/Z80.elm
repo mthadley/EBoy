@@ -1,8 +1,6 @@
 module Z80 exposing (..)
 
 {-| An emulation of a Z80 CPU core
-    TODO: Possible remove `ByteData` and `WordData`, these might be
-    meaningless.
 -}
 
 
@@ -56,33 +54,12 @@ type WordRegister
     | AF
 
 
-{-| ByteData
-    * d8  means immediate 8 bit data
-    * a8  means 8 bit unsigned data, which are added to $FF00 in
-          certain instructions (replacement for missing IN and OUT instructions)
-    * r8  means 8 bit signed data, which are added to program counter
--}
-type ByteData
-    = D8
-    | A8
-    | R8
-
-
-{-| WordData
-    * d16 means immediate 16 bit data
-    * a16 means 16 bit address
--}
-type WordData
-    = D16
-    | A16
-
-
 {-| Targets for 8-bit `LD` instructions.
 -}
 type LoadByteTarget
     = IntoByteRegister ByteRegister
     | IntoMem WordRegister
-    | IntoMemWordData
+    | IntoMemData_B
 
 
 {-| Sources for 8-bit `LD` instructions.
@@ -90,21 +67,21 @@ type LoadByteTarget
 type LoadByteSource
     = FromByteRegister ByteRegister
     | FromMem WordRegister
-    | FromByteData ByteData
+    | FromByteData
 
 
 {-| Targets for 16-bit `LD` instructions.
 -}
 type LoadWordTarget
     = IntoWordRegister WordRegister
-    | IntoMemData WordData
+    | IntoMemData_W
 
 
 {-| Sources for 16-bit `LD` instructions.
 -}
 type LoadWordSource
     = FromWordRegister WordRegister
-    | FromWordData WordData
+    | FromWordData
     | FromSPByteData
 
 
@@ -127,7 +104,7 @@ type LoadOffsetTarget
 {-| Jump Targets
 -}
 type JumpTarget
-    = JumpData WordData
+    = JumpData
     | JumpMemHL
 
 
@@ -136,7 +113,7 @@ type JumpTarget
 type Param
     = WithRegister ByteRegister
     | WithMemHL
-    | WithData ByteData
+    | WithData
 
 
 {-| Flags checked by jump instructions.
@@ -216,7 +193,7 @@ decode : Int -> ( Op, Cycles )
 decode code =
     case code of
         0x01 ->
-            LDW (IntoWordRegister BC) (FromWordData D16) @ 12
+            LDW (IntoWordRegister BC) FromWordData @ 12
 
         0x02 ->
             LD (IntoMem BC) (FromByteRegister A) @ 8
@@ -231,13 +208,13 @@ decode code =
             DEC (WithRegister B) @ 4
 
         0x06 ->
-            LD (IntoByteRegister B) (FromByteData D8) @ 8
+            LD (IntoByteRegister B) FromByteData @ 8
 
         0x07 ->
             RLCA @ 4
 
         0x08 ->
-            LDW (IntoMemData A16) (FromWordRegister SP) @ 20
+            LDW IntoMemData_W (FromWordRegister SP) @ 20
 
         0x09 ->
             ADDW HL BC @ 8
@@ -255,7 +232,7 @@ decode code =
             DEC (WithRegister C) @ 4
 
         0x0E ->
-            LD (IntoByteRegister C) (FromByteData D8) @ 8
+            LD (IntoByteRegister C) FromByteData @ 8
 
         0x0F ->
             RRCA @ 4
@@ -264,7 +241,7 @@ decode code =
             STOP @ 4
 
         0x11 ->
-            LDW (IntoWordRegister DE) (FromWordData D16) @ 12
+            LDW (IntoWordRegister DE) FromWordData @ 12
 
         0x12 ->
             LD (IntoMem DE) (FromByteRegister A) @ 8
@@ -279,7 +256,7 @@ decode code =
             DEC (WithRegister D) @ 4
 
         0x16 ->
-            LD (IntoByteRegister D) (FromByteData D8) @ 8
+            LD (IntoByteRegister D) FromByteData @ 8
 
         0x17 ->
             RLA @ 4
@@ -303,7 +280,7 @@ decode code =
             DEC (WithRegister E) @ 4
 
         0x1E ->
-            LD (IntoByteRegister E) (FromByteData D8) @ 8
+            LD (IntoByteRegister E) FromByteData @ 8
 
         0x1F ->
             RRA @ 4
@@ -312,7 +289,7 @@ decode code =
             JR (NotSet Zero) / ( 12, 8 )
 
         0x21 ->
-            LDW (IntoWordRegister HL) (FromWordData D16) @ 12
+            LDW (IntoWordRegister HL) FromWordData @ 12
 
         0x22 ->
             LDI (IntoMem HL) (FromByteRegister A) @ 8
@@ -327,7 +304,7 @@ decode code =
             DEC (WithRegister H) @ 4
 
         0x26 ->
-            LD (IntoByteRegister H) (FromByteData D8) @ 8
+            LD (IntoByteRegister H) FromByteData @ 8
 
         0x27 ->
             DAA @ 4
@@ -351,7 +328,7 @@ decode code =
             DEC (WithRegister L) @ 4
 
         0x2E ->
-            LD (IntoByteRegister L) (FromByteData D8) @ 8
+            LD (IntoByteRegister L) FromByteData @ 8
 
         0x2F ->
             CPL @ 4
@@ -360,7 +337,7 @@ decode code =
             JR (NotSet Carry) / ( 12, 8 )
 
         0x31 ->
-            LDW (IntoWordRegister SP) (FromWordData D16) @ 12
+            LDW (IntoWordRegister SP) FromWordData @ 12
 
         0x32 ->
             LDD (IntoMem HL) (FromByteRegister A) @ 8
@@ -375,7 +352,7 @@ decode code =
             DEC WithMemHL @ 12
 
         0x36 ->
-            LD (IntoMem HL) (FromByteData D8) @ 12
+            LD (IntoMem HL) FromByteData @ 12
 
         0x37 ->
             SCF @ 4
@@ -399,7 +376,7 @@ decode code =
             DEC (WithRegister A) @ 4
 
         0x3E ->
-            LD (IntoByteRegister A) (FromByteData D8) @ 8
+            LD (IntoByteRegister A) FromByteData @ 8
 
         0x3F ->
             CCF @ 4
@@ -795,10 +772,10 @@ decode code =
             POP BC @ 12
 
         0xC2 ->
-            JP (NotSet Zero) (JumpData A16) / ( 16, 12 )
+            JP (NotSet Zero) JumpData / ( 16, 12 )
 
         0xC3 ->
-            JP NoCondition (JumpData A16) / ( 16, 12 )
+            JP NoCondition JumpData / ( 16, 12 )
 
         0xC4 ->
             CALL (NotSet Zero) / ( 24, 12 )
@@ -807,7 +784,7 @@ decode code =
             PUSH BC @ 16
 
         0xC6 ->
-            ADD A (WithData D8) @ 8
+            ADD A WithData @ 8
 
         0xC7 ->
             RST 0x00 @ 16
@@ -819,7 +796,7 @@ decode code =
             RET NoCondition @ 16
 
         0xCA ->
-            JP (Set Zero) (JumpData A16) / ( 16, 12 )
+            JP (Set Zero) JumpData / ( 16, 12 )
 
         0xCB ->
             PREFIX_CB @ 4
@@ -831,7 +808,7 @@ decode code =
             CALL NoCondition @ 24
 
         0xCE ->
-            ADC A (WithData D8) @ 8
+            ADC A WithData @ 8
 
         0xCF ->
             RST 0x08 @ 16
@@ -843,7 +820,7 @@ decode code =
             POP DE @ 12
 
         0xD2 ->
-            JP (NotSet Carry) (JumpData A16) / ( 16, 12 )
+            JP (NotSet Carry) JumpData / ( 16, 12 )
 
         0xD3 ->
             none
@@ -855,7 +832,7 @@ decode code =
             PUSH DE @ 16
 
         0xD6 ->
-            SUB (WithData D8) @ 8
+            SUB WithData @ 8
 
         0xD7 ->
             RST 0x10 @ 16
@@ -867,7 +844,7 @@ decode code =
             RETI @ 16
 
         0xDA ->
-            JP (Set Carry) (JumpData A16) / ( 16, 12 )
+            JP (Set Carry) JumpData / ( 16, 12 )
 
         0xDB ->
             none
@@ -903,7 +880,7 @@ decode code =
             PUSH HL @ 16
 
         0xE6 ->
-            AND (WithData D8) @ 8
+            AND WithData @ 8
 
         0xE7 ->
             RST 0x20 @ 16
@@ -915,7 +892,7 @@ decode code =
             JP NoCondition JumpMemHL @ 4
 
         0xEA ->
-            LD IntoMemWordData (FromByteRegister A) @ 16
+            LD IntoMemData_B (FromByteRegister A) @ 16
 
         0xEB ->
             none
@@ -927,7 +904,7 @@ decode code =
             none
 
         0xEE ->
-            XOR (WithData D8) @ 8
+            XOR WithData @ 8
 
         0xEF ->
             RST 0x28 @ 16
@@ -951,7 +928,7 @@ decode code =
             PUSH AF @ 16
 
         0xF6 ->
-            OR (WithData D8) @ 8
+            OR WithData @ 8
 
         0xF7 ->
             RST 0x30 @ 16
@@ -963,7 +940,7 @@ decode code =
             LDW (IntoWordRegister SP) (FromWordRegister HL) @ 8
 
         0xFA ->
-            LD IntoMemWordData (FromByteRegister A) @ 16
+            LD IntoMemData_B (FromByteRegister A) @ 16
 
         0xFB ->
             EI @ 4
@@ -975,7 +952,7 @@ decode code =
             none
 
         0xFE ->
-            CP (WithData D8) @ 8
+            CP WithData @ 8
 
         0xFF ->
             RST 0x38 @ 16
