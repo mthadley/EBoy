@@ -1,9 +1,13 @@
 module Z80 exposing (..)
 
+import Z80.LB as LB
+import Z80.LO as LO
+import Z80.LW as LW
+import Z80.Registers exposing (..)
+
+
 {-| An emulation of a Z80 CPU core
 -}
-
-
 type alias State =
     { clock : Clock
     , registers : Registers
@@ -30,75 +34,6 @@ type alias Registers =
     , m : Int {- Clock -}
     , t : Int
     }
-
-
-type ByteRegister
-    = A
-    | B
-    | C
-    | D
-    | E
-    | H
-    | L
-    | F
-    | M
-    | T
-
-
-type WordRegister
-    = PC
-    | SP
-    | BC
-    | HL
-    | DE
-    | AF
-
-
-{-| Targets for 8-bit `LD` instructions.
--}
-type LoadByteTarget
-    = IntoByteRegister ByteRegister
-    | IntoMem WordRegister
-    | IntoMemData_B
-
-
-{-| Sources for 8-bit `LD` instructions.
--}
-type LoadByteSource
-    = FromByteRegister ByteRegister
-    | FromMem WordRegister
-    | FromByteData
-
-
-{-| Targets for 16-bit `LD` instructions.
--}
-type LoadWordTarget
-    = IntoWordRegister WordRegister
-    | IntoMemData_W
-
-
-{-| Sources for 16-bit `LD` instructions.
--}
-type LoadWordSource
-    = FromWordRegister WordRegister
-    | FromWordData
-    | FromSPByteData
-
-
-{-| Sources for `LDH` instructions.
--}
-type LoadOffsetSource
-    = FromRegisterA
-    | FromMemDataOffset
-    | FromMemCOffset
-
-
-{-| Targets for `LDH` instructions.
--}
-type LoadOffsetTarget
-    = IntoRegisterA
-    | IntoMemDataOffset
-    | IntoMemCOffset
 
 
 {-| Jump Targets
@@ -144,9 +79,9 @@ type Op
     = INVALID Int
     | NONE
     | NOP
-    | LD LoadByteTarget LoadByteSource
-    | LDH LoadOffsetTarget LoadOffsetSource
-    | LDW LoadWordTarget LoadWordSource
+    | LD LB.Target LB.Source
+    | LDH LO.Target LO.Source
+    | LDW LW.Target LW.Source
     | INC Param
     | INCW WordRegister
     | DEC Param
@@ -161,10 +96,10 @@ type Op
     | RLA
     | JR FlagCondition
     | RRA
-    | LDI LoadByteTarget LoadByteSource
+    | LDI LB.Target LB.Source
     | DAA
     | CPL
-    | LDD LoadByteTarget LoadByteSource
+    | LDD LB.Target LB.Source
     | SCF
     | CCF
     | HALT
@@ -193,10 +128,10 @@ decode : Int -> ( Op, Cycles )
 decode code =
     case code of
         0x01 ->
-            LDW (IntoWordRegister BC) FromWordData @ 12
+            LDW (LW.IntoRegister BC) LW.FromData @ 12
 
         0x02 ->
-            LD (IntoMem BC) (FromByteRegister A) @ 8
+            LD (LB.IntoMem BC) (LB.FromRegister A) @ 8
 
         0x03 ->
             INCW BC @ 8
@@ -208,19 +143,19 @@ decode code =
             DEC (WithRegister B) @ 4
 
         0x06 ->
-            LD (IntoByteRegister B) FromByteData @ 8
+            LD (LB.IntoRegister B) LB.FromData @ 8
 
         0x07 ->
             RLCA @ 4
 
         0x08 ->
-            LDW IntoMemData_W (FromWordRegister SP) @ 20
+            LDW LW.IntoMemData (LW.FromRegister SP) @ 20
 
         0x09 ->
             ADDW HL BC @ 8
 
         0x0A ->
-            LD (IntoByteRegister A) (FromMem BC) @ 8
+            LD (LB.IntoRegister A) (LB.FromMem BC) @ 8
 
         0x0B ->
             DECW BC @ 8
@@ -232,7 +167,7 @@ decode code =
             DEC (WithRegister C) @ 4
 
         0x0E ->
-            LD (IntoByteRegister C) FromByteData @ 8
+            LD (LB.IntoRegister C) LB.FromData @ 8
 
         0x0F ->
             RRCA @ 4
@@ -241,10 +176,10 @@ decode code =
             STOP @ 4
 
         0x11 ->
-            LDW (IntoWordRegister DE) FromWordData @ 12
+            LDW (LW.IntoRegister DE) LW.FromData @ 12
 
         0x12 ->
-            LD (IntoMem DE) (FromByteRegister A) @ 8
+            LD (LB.IntoMem DE) (LB.FromRegister A) @ 8
 
         0x13 ->
             INCW DE @ 8
@@ -256,7 +191,7 @@ decode code =
             DEC (WithRegister D) @ 4
 
         0x16 ->
-            LD (IntoByteRegister D) FromByteData @ 8
+            LD (LB.IntoRegister D) LB.FromData @ 8
 
         0x17 ->
             RLA @ 4
@@ -268,7 +203,7 @@ decode code =
             ADDW HL DE @ 8
 
         0x1A ->
-            LD (IntoByteRegister A) (FromMem DE) @ 8
+            LD (LB.IntoRegister A) (LB.FromMem DE) @ 8
 
         0x1B ->
             DECW DE @ 8
@@ -280,7 +215,7 @@ decode code =
             DEC (WithRegister E) @ 4
 
         0x1E ->
-            LD (IntoByteRegister E) FromByteData @ 8
+            LD (LB.IntoRegister E) LB.FromData @ 8
 
         0x1F ->
             RRA @ 4
@@ -289,10 +224,10 @@ decode code =
             JR (NotSet Zero) / ( 12, 8 )
 
         0x21 ->
-            LDW (IntoWordRegister HL) FromWordData @ 12
+            LDW (LW.IntoRegister HL) LW.FromData @ 12
 
         0x22 ->
-            LDI (IntoMem HL) (FromByteRegister A) @ 8
+            LDI (LB.IntoMem HL) (LB.FromRegister A) @ 8
 
         0x23 ->
             INCW HL @ 8
@@ -304,7 +239,7 @@ decode code =
             DEC (WithRegister H) @ 4
 
         0x26 ->
-            LD (IntoByteRegister H) FromByteData @ 8
+            LD (LB.IntoRegister H) LB.FromData @ 8
 
         0x27 ->
             DAA @ 4
@@ -316,7 +251,7 @@ decode code =
             ADDW HL HL @ 8
 
         0x2A ->
-            LDI (IntoByteRegister A) (FromMem HL) @ 8
+            LDI (LB.IntoRegister A) (LB.FromMem HL) @ 8
 
         0x2B ->
             DECW HL @ 8
@@ -328,7 +263,7 @@ decode code =
             DEC (WithRegister L) @ 4
 
         0x2E ->
-            LD (IntoByteRegister L) FromByteData @ 8
+            LD (LB.IntoRegister L) LB.FromData @ 8
 
         0x2F ->
             CPL @ 4
@@ -337,10 +272,10 @@ decode code =
             JR (NotSet Carry) / ( 12, 8 )
 
         0x31 ->
-            LDW (IntoWordRegister SP) FromWordData @ 12
+            LDW (LW.IntoRegister SP) LW.FromData @ 12
 
         0x32 ->
-            LDD (IntoMem HL) (FromByteRegister A) @ 8
+            LDD (LB.IntoMem HL) (LB.FromRegister A) @ 8
 
         0x33 ->
             INCW SP @ 8
@@ -352,7 +287,7 @@ decode code =
             DEC WithMemHL @ 12
 
         0x36 ->
-            LD (IntoMem HL) FromByteData @ 12
+            LD (LB.IntoMem HL) LB.FromData @ 12
 
         0x37 ->
             SCF @ 4
@@ -364,7 +299,7 @@ decode code =
             ADDW HL SP @ 8
 
         0x3A ->
-            LDD (IntoByteRegister A) (FromMem HL) @ 8
+            LDD (LB.IntoRegister A) (LB.FromMem HL) @ 8
 
         0x3B ->
             DECW SP @ 8
@@ -376,202 +311,202 @@ decode code =
             DEC (WithRegister A) @ 4
 
         0x3E ->
-            LD (IntoByteRegister A) FromByteData @ 8
+            LD (LB.IntoRegister A) LB.FromData @ 8
 
         0x3F ->
             CCF @ 4
 
         0x40 ->
-            LD (IntoByteRegister B) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister B) @ 4
 
         0x41 ->
-            LD (IntoByteRegister B) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister C) @ 4
 
         0x42 ->
-            LD (IntoByteRegister B) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister D) @ 4
 
         0x43 ->
-            LD (IntoByteRegister B) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister E) @ 4
 
         0x44 ->
-            LD (IntoByteRegister B) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister H) @ 4
 
         0x45 ->
-            LD (IntoByteRegister B) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister L) @ 4
 
         0x46 ->
-            LD (IntoByteRegister B) (FromMem HL) @ 8
+            LD (LB.IntoRegister B) (LB.FromMem HL) @ 8
 
         0x47 ->
-            LD (IntoByteRegister B) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister B) (LB.FromRegister A) @ 4
 
         0x48 ->
-            LD (IntoByteRegister C) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister B) @ 4
 
         0x49 ->
-            LD (IntoByteRegister C) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister C) @ 4
 
         0x4A ->
-            LD (IntoByteRegister C) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister D) @ 4
 
         0x4B ->
-            LD (IntoByteRegister C) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister E) @ 4
 
         0x4C ->
-            LD (IntoByteRegister C) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister H) @ 4
 
         0x4D ->
-            LD (IntoByteRegister C) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister L) @ 4
 
         0x4E ->
-            LD (IntoByteRegister C) (FromMem HL) @ 8
+            LD (LB.IntoRegister C) (LB.FromMem HL) @ 8
 
         0x4F ->
-            LD (IntoByteRegister C) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister C) (LB.FromRegister A) @ 4
 
         0x50 ->
-            LD (IntoByteRegister D) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister B) @ 4
 
         0x51 ->
-            LD (IntoByteRegister D) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister C) @ 4
 
         0x52 ->
-            LD (IntoByteRegister D) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister D) @ 4
 
         0x53 ->
-            LD (IntoByteRegister D) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister E) @ 4
 
         0x54 ->
-            LD (IntoByteRegister D) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister H) @ 4
 
         0x55 ->
-            LD (IntoByteRegister D) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister L) @ 4
 
         0x56 ->
-            LD (IntoByteRegister D) (FromMem HL) @ 8
+            LD (LB.IntoRegister D) (LB.FromMem HL) @ 8
 
         0x57 ->
-            LD (IntoByteRegister D) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister D) (LB.FromRegister A) @ 4
 
         0x58 ->
-            LD (IntoByteRegister E) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister B) @ 4
 
         0x59 ->
-            LD (IntoByteRegister E) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister C) @ 4
 
         0x5A ->
-            LD (IntoByteRegister E) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister D) @ 4
 
         0x5B ->
-            LD (IntoByteRegister E) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister E) @ 4
 
         0x5C ->
-            LD (IntoByteRegister E) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister H) @ 4
 
         0x5D ->
-            LD (IntoByteRegister E) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister L) @ 4
 
         0x5E ->
-            LD (IntoByteRegister E) (FromMem HL) @ 8
+            LD (LB.IntoRegister E) (LB.FromMem HL) @ 8
 
         0x5F ->
-            LD (IntoByteRegister E) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister E) (LB.FromRegister A) @ 4
 
         0x60 ->
-            LD (IntoByteRegister H) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister B) @ 4
 
         0x61 ->
-            LD (IntoByteRegister H) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister C) @ 4
 
         0x62 ->
-            LD (IntoByteRegister H) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister D) @ 4
 
         0x63 ->
-            LD (IntoByteRegister H) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister E) @ 4
 
         0x64 ->
-            LD (IntoByteRegister H) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister H) @ 4
 
         0x65 ->
-            LD (IntoByteRegister H) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister L) @ 4
 
         0x66 ->
-            LD (IntoByteRegister H) (FromMem HL) @ 8
+            LD (LB.IntoRegister H) (LB.FromMem HL) @ 8
 
         0x67 ->
-            LD (IntoByteRegister H) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister H) (LB.FromRegister A) @ 4
 
         0x68 ->
-            LD (IntoByteRegister L) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister B) @ 4
 
         0x69 ->
-            LD (IntoByteRegister L) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister C) @ 4
 
         0x6A ->
-            LD (IntoByteRegister L) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister D) @ 4
 
         0x6B ->
-            LD (IntoByteRegister L) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister E) @ 4
 
         0x6C ->
-            LD (IntoByteRegister L) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister H) @ 4
 
         0x6D ->
-            LD (IntoByteRegister L) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister L) @ 4
 
         0x6E ->
-            LD (IntoByteRegister L) (FromMem HL) @ 8
+            LD (LB.IntoRegister L) (LB.FromMem HL) @ 8
 
         0x6F ->
-            LD (IntoByteRegister L) (FromByteRegister A) @ 4
+            LD (LB.IntoRegister L) (LB.FromRegister A) @ 4
 
         0x70 ->
-            LD (IntoMem HL) (FromByteRegister B) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister B) @ 8
 
         0x71 ->
-            LD (IntoMem HL) (FromByteRegister C) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister C) @ 8
 
         0x72 ->
-            LD (IntoMem HL) (FromByteRegister D) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister D) @ 8
 
         0x73 ->
-            LD (IntoMem HL) (FromByteRegister E) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister E) @ 8
 
         0x74 ->
-            LD (IntoMem HL) (FromByteRegister H) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister H) @ 8
 
         0x75 ->
-            LD (IntoMem HL) (FromByteRegister L) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister L) @ 8
 
         0x76 ->
             HALT @ 4
 
         0x77 ->
-            LD (IntoMem HL) (FromByteRegister A) @ 8
+            LD (LB.IntoMem HL) (LB.FromRegister A) @ 8
 
         0x78 ->
-            LD (IntoByteRegister A) (FromByteRegister B) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister B) @ 4
 
         0x79 ->
-            LD (IntoByteRegister A) (FromByteRegister C) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister C) @ 4
 
         0x7A ->
-            LD (IntoByteRegister A) (FromByteRegister D) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister D) @ 4
 
         0x7B ->
-            LD (IntoByteRegister A) (FromByteRegister E) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister E) @ 4
 
         0x7C ->
-            LD (IntoByteRegister A) (FromByteRegister H) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister H) @ 4
 
         0x7D ->
-            LD (IntoByteRegister A) (FromByteRegister L) @ 4
+            LD (LB.IntoRegister A) (LB.FromRegister L) @ 4
 
         0x7E ->
-            LD (IntoByteRegister A) (FromMem HL) @ 8
+            LD (LB.IntoRegister A) (LB.FromMem HL) @ 8
 
         0x7F ->
-            LD (IntoByteRegister A) (FromByteRegister A) @ 8
+            LD (LB.IntoRegister A) (LB.FromRegister A) @ 8
 
         0x80 ->
             ADD A (WithRegister B) @ 4
@@ -862,13 +797,13 @@ decode code =
             RST 0x18 @ 16
 
         0xE0 ->
-            LDH IntoMemDataOffset FromRegisterA @ 12
+            LDH LO.IntoMemDataOffset LO.FromRegisterA @ 12
 
         0xE1 ->
             POP HL @ 12
 
         0xE2 ->
-            LDH IntoMemCOffset FromRegisterA @ 8
+            LDH LO.IntoMemCOffset LO.FromRegisterA @ 8
 
         0xE3 ->
             none
@@ -892,7 +827,7 @@ decode code =
             JP NoCondition JumpMemHL @ 4
 
         0xEA ->
-            LD IntoMemData_B (FromByteRegister A) @ 16
+            LD LB.IntoMemData (LB.FromRegister A) @ 16
 
         0xEB ->
             none
@@ -910,13 +845,13 @@ decode code =
             RST 0x28 @ 16
 
         0xF0 ->
-            LDH IntoRegisterA FromMemDataOffset @ 12
+            LDH LO.IntoRegisterA LO.FromMemDataOffset @ 12
 
         0xF1 ->
             POP AF @ 12
 
         0xF2 ->
-            LDH IntoRegisterA FromMemCOffset @ 8
+            LDH LO.IntoRegisterA LO.FromMemCOffset @ 8
 
         0xF3 ->
             DI @ 4
@@ -934,13 +869,13 @@ decode code =
             RST 0x30 @ 16
 
         0xF8 ->
-            LDW (IntoWordRegister HL) FromSPByteData @ 12
+            LDW (LW.IntoRegister HL) LW.FromSPByteData @ 12
 
         0xF9 ->
-            LDW (IntoWordRegister SP) (FromWordRegister HL) @ 8
+            LDW (LW.IntoRegister SP) (LW.FromRegister HL) @ 8
 
         0xFA ->
-            LD IntoMemData_B (FromByteRegister A) @ 16
+            LD LB.IntoMemData (LB.FromRegister A) @ 16
 
         0xFB ->
             EI @ 4
