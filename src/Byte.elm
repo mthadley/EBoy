@@ -6,7 +6,11 @@ module Byte
         , addc
         , sub
         , subc
+        , lsbSet
+        , msbSet
         )
+
+import Bitwise
 
 
 type Byte
@@ -67,6 +71,29 @@ subc (Byte x) (Byte y) =
         ( diff < 0
         , Byte <| mod <| diff + 256
         )
+
+
+{-| Returns a `Bool` indicating whether or not the most significant
+bit is set.
+-}
+msbSet : Byte -> Bool
+msbSet =
+    getBit 7
+
+
+{-| Returns a `Bool` indicating whether or not the least significant
+bit is set.
+-}
+lsbSet : Byte -> Bool
+lsbSet =
+    getBit 0
+
+
+{-| Returns a  `Bool` indicating wether or not the bit is set.
+-}
+getBit : Int -> Byte -> Bool
+getBit n (Byte b) =
+    (Bitwise.and 1 <| Bitwise.shiftRightBy n b) == 1
 
 
 mod : Int -> Int
