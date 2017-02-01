@@ -67,13 +67,14 @@ type FlagCondition
 
 
 {-| A union type representing all of the supported base set of instructions
-    of the Z80. There are a few extra "synthetic" instructions added to make
-    it easier to work with 16-bit (Word) operatoins. These include:
-    * `ADDW`
-    * `INCW`
-    * `LDW`
-    * `DECW`
-    * `ADDSP`
+of the Z80. There are a few extra "synthetic" instructions added to make
+it easier to work with 16-bit (Word) operatoins. These include:
+
+* `ADDW`
+* `INCW`
+* `LDW`
+* `DECW`
+* `ADDSP`
 -}
 type Op
     = INVALID Int
@@ -122,7 +123,7 @@ type Op
 
 
 {-| Decodes an instruction, returning a tuple of the `Op` and
-    how many `Cycle`'s' it will take.
+how many `Cycle`'s' it will take.
 -}
 decode : Int -> ( Op, Cycles )
 decode code =
@@ -902,7 +903,7 @@ none =
 
 
 {-| Represents how many cycles an intruction will take. Some
-    have two values since they are branching (`JR`, `JRNZ`, etc.).
+have two values since they are branching (`JR`, `JRNZ`, etc.).
 -}
 type Cycles
     = Always Int
@@ -910,7 +911,7 @@ type Cycles
 
 
 {-| Returns a tuple containing the operation and number of
-    cycles it will take.
+cycles it will take.
 -}
 (@) : Op -> Int -> ( Op, Cycles )
 (@) op cycles =
@@ -918,8 +919,8 @@ type Cycles
 
 
 {-| Same as `@` but for branching instructions. Also takes a
-    tuple instead of just an `Int`, where the first is if the
-    branch is taken, and the second if it is not.
+tuple instead of just an `Int`, where the first is if the
+branch is taken, and the second if it is not.
 -}
 (/) : Op -> ( Int, Int ) -> ( Op, Cycles )
 (/) op ( taken, notTaken ) =
