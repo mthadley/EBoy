@@ -126,7 +126,7 @@ rotateLeft =
     rotateLeftBy 1
 
 
-{-| Rotate byte left.
+{-| Rotate byte right.
 -}
 rotateRight : Byte -> Byte
 rotateRight =
