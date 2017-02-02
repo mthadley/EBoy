@@ -1,26 +1,27 @@
 module Byte
     exposing
         ( Byte
-        , fromInt
         , add
         , addc
-        , sub
-        , subc
+        , fromInt
+        , getBit
         , lsbSet
         , msbSet
-        , getBit
-        , rotateLeft
-        , rotateRight
-        , rotateLeftBy
-        , rotateRightBy
-        , shiftLeft
-        , shiftRight
-        , shiftRightZf
-        , shiftLeftBy
-        , shiftRightBy
-        , shiftRightZfBy
-        , set
         , reset
+        , rotateLeft
+        , rotateLeftBy
+        , rotateRight
+        , rotateRightBy
+        , set
+        , shiftLeft
+        , shiftLeftBy
+        , shiftRight
+        , shiftRightBy
+        , shiftRightZf
+        , shiftRightZfBy
+        , sub
+        , subc
+        , toInt
         )
 
 import Bitwise
@@ -32,11 +33,20 @@ type Byte
 
 {-| Converts an `Int` to a `Byte`.
 
-    fromInt 3 == Byte 3
+    fromInt 3 : Byte
 -}
 fromInt : Int -> Byte
 fromInt =
     Byte << mod
+
+
+{-| Converts a `Byte` to an `Int`.
+
+    (fromInt 3 |> toInt) == 3
+-}
+toInt : Byte -> Int
+toInt (Byte b) =
+    b
 
 
 {-| Adds two `Byte`s.
