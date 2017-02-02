@@ -8,6 +8,19 @@ module Byte
         , subc
         , lsbSet
         , msbSet
+        , getBit
+        , rotateLeft
+        , rotateRight
+        , rotateLeftBy
+        , rotateRightBy
+        , shiftLeft
+        , shiftRight
+        , shiftRightZf
+        , shiftLeftBy
+        , shiftRightBy
+        , shiftRightZfBy
+        , set
+        , reset
         )
 
 import Bitwise
@@ -36,8 +49,8 @@ add a b =
 {-| Adds two `Byte`s, returning a tuple of the sum and a
 `Bool` indicating whether or not there was overflow.
 
-    addc (Byte.fromInt 5) (Byte.fromInt 3) == ( False, Byte 8 )
-    addc (Byte.fromInt 254) (Byte.fromInt 3) == ( True, Byte 2 )
+    addc (fromInt 5) (fromInt 3) == ( False, fromInt 8 )
+    addc (fromInt 254) (fromInt 3) == ( True, fromInt 2 )
 -}
 addc : Byte -> Byte -> ( Bool, Byte )
 addc (Byte x) (Byte y) =
@@ -59,8 +72,8 @@ sub a b =
 tuple of the difference and a `Bool` indicating if there was
 underflow.
 
-    subc (Byte.fromInt 5) (Byte.fromInt 3) == ( False, Byte 2 )
-    subc (Byte.fromInt 2) (Byte.fromInt 3) == ( True, Byte 255 )
+    subc (fromInt 5) (fromInt 3) == ( False, fromInt 2 )
+    subc (fromInt 2) (fromInt 3) == ( True, fromInt 255 )
 -}
 subc : Byte -> Byte -> ( Bool, Byte )
 subc (Byte x) (Byte y) =
@@ -96,6 +109,130 @@ getBit n (Byte b) =
     (Bitwise.and 1 <| Bitwise.shiftRightBy n b) == 1
 
 
+{-| Rotate byte left.
+-}
+rotateLeft : Byte -> Byte
+rotateLeft =
+    rotateLeftBy 1
+
+
+{-| Rotate byte left.
+-}
+rotateRight : Byte -> Byte
+rotateRight =
+    rotateRightBy 1
+
+
+{-| Rotate byte left N times.
+-}
+rotateLeftBy : Int -> Byte -> Byte
+rotateLeftBy =
+    rotate True
+
+
+{-| Rotate byte right N times.
+-}
+rotateRightBy : Int -> Byte -> Byte
+rotateRightBy =
+    rotate False
+
+
+{-| Sets the nth bit of the `Byte`.
+-}
+set : Int -> Byte -> Byte
+set n (Byte b) =
+    Bitwise.shiftLeftBy n 1
+        |> mask
+        |> Bitwise.or b
+        |> Byte
+
+
+{-| Resets the nth bit of the `Byte`.
+-}
+reset : Int -> Byte -> Byte
+reset n (Byte b) =
+    Bitwise.shiftLeftBy n 1
+        |> Bitwise.complement
+        |> Bitwise.and b
+        |> mask
+        |> Byte
+
+
+{-| Shifts Byte left once.
+-}
+shiftLeft : Byte -> Byte
+shiftLeft =
+    shiftLeftBy 1
+
+
+{-| Shifts Byte left n times.
+-}
+shiftLeftBy : Int -> Byte -> Byte
+shiftLeftBy n (Byte b) =
+    Bitwise.shiftLeftBy n b
+        |> mask
+        |> Byte
+
+
+{-| Shifts Byte right once, preserving sign.
+-}
+shiftRight : Byte -> Byte
+shiftRight =
+    shiftRightBy 1
+
+
+{-| Shifts Byte right n times, preserving sign.
+-}
+shiftRightBy : Int -> Byte -> Byte
+shiftRightBy n (Byte b) =
+    let
+        sign =
+            if Bitwise.and 0x80 b > 0 then
+                Bitwise.complement 0
+                    |> Bitwise.shiftLeftBy (8 - n)
+                    |> mask
+            else
+                0
+    in
+        sign
+            |> Bitwise.or (Bitwise.shiftRightZfBy n b)
+            |> Byte
+
+
+{-| Shifts Byte right once, filling with zeroes.
+-}
+shiftRightZf : Byte -> Byte
+shiftRightZf =
+    shiftRightZfBy 1
+
+
+{-| Shifts Byte right n times, filling with zeroes.
+-}
+shiftRightZfBy : Int -> Byte -> Byte
+shiftRightZfBy n (Byte b) =
+    Byte <| Bitwise.shiftRightZfBy n b
+
+
+rotate : Bool -> Int -> Byte -> Byte
+rotate left n (Byte b) =
+    let
+        ( leftTimes, rightTimes ) =
+            if left then
+                ( n, 8 - n )
+            else
+                ( 8 - n, n )
+    in
+        Byte <|
+            Bitwise.or
+                (mask <| Bitwise.shiftLeftBy leftTimes b)
+                (Bitwise.shiftRightZfBy rightTimes b)
+
+
 mod : Int -> Int
 mod n =
     n % 256
+
+
+mask : Int -> Int
+mask =
+    Bitwise.and 0xFF
