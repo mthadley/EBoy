@@ -1,8 +1,9 @@
 module Main exposing (..)
 
+import Byte
 import Html exposing (..)
 import Z80
-import Byte
+import Z80.Decode
 
 
 main : Html msg
