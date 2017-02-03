@@ -1,5 +1,6 @@
-module Z80.Decode exposing (..)
+module Z80.Decode exposing (decode, decodeCB)
 
+import Bitwise
 import Byte exposing (Byte)
 import Z80.LB as LB
 import Z80.LO as LO
@@ -784,61 +785,63 @@ decode b =
 
 
 {-| Decodes a CB instruction, returning a tuple of the `Op` and
-how many `Cycle`'s' it will take.
+how many `Cycle`'s' it will take. This is implemented by separating
+the 1 byte instruction space into 32 groups, each group containing 8
+instructions that follow the order defined below.
 -}
 decodeCB : Byte -> ( Op, Cycles )
-decodeCB b =
-    case Byte.toInt b of
-        0x00 ->
-            RLC (OnRegister B) @ 8
+decodeCB byte =
+    let
+        b =
+            Byte.toInt byte
+    in
+        case b // 8 of
+            0 ->
+                decodeCBWith RLC b
 
-        0x01 ->
-            RLC (OnRegister C) @ 8
+            1 ->
+                decodeCBWith RRC b
 
-        0x02 ->
-            RLC (OnRegister D) @ 8
+            2 ->
+                decodeCBWith RL b
 
-        0x03 ->
-            RLC (OnRegister E) @ 8
+            3 ->
+                decodeCBWith RR b
 
-        0x04 ->
-            RLC (OnRegister H) @ 8
+            b ->
+                INVALID b @ 0
 
-        0x05 ->
-            RLC (OnRegister L) @ 8
 
-        0x06 ->
-            RLC OnMemHL @ 16
+decodeCBWith : (CBParam -> Op) -> Int -> ( Op, Cycles )
+decodeCBWith op code =
+    let
+        ( param, cycles ) =
+            case (Bitwise.and code 0x0F) % 8 of
+                0 ->
+                    ( OnRegister B, 8 )
 
-        0x07 ->
-            RLC (OnRegister A) @ 8
+                1 ->
+                    ( OnRegister C, 8 )
 
-        0x08 ->
-            RRC (OnRegister B) @ 8
+                2 ->
+                    ( OnRegister D, 8 )
 
-        0x09 ->
-            RRC (OnRegister C) @ 8
+                3 ->
+                    ( OnRegister E, 8 )
 
-        0x0A ->
-            RRC (OnRegister D) @ 8
+                4 ->
+                    ( OnRegister H, 8 )
 
-        0x0B ->
-            RRC (OnRegister E) @ 8
+                5 ->
+                    ( OnRegister L, 8 )
 
-        0x0C ->
-            RRC (OnRegister H) @ 8
+                6 ->
+                    ( OnMemHL, 16 )
 
-        0x0D ->
-            RRC (OnRegister L) @ 8
-
-        0x0E ->
-            RRC OnMemHL @ 16
-
-        0x0F ->
-            RRC (OnRegister A) @ 8
-
-        b ->
-            INVALID b @ 0
+                _ ->
+                    ( OnRegister A, 8 )
+    in
+        op param @ cycles
 
 
 none : ( Op, Cycles )

@@ -102,3 +102,5 @@ type Op
     | EI
     | RLC CBParam
     | RRC CBParam
+    | RL CBParam
+    | RR CBParam
