@@ -1,5 +1,6 @@
 module Z80.Decode exposing (..)
 
+import Byte exposing (Byte)
 import Z80.LB as LB
 import Z80.LO as LO
 import Z80.LW as LW
@@ -10,9 +11,9 @@ import Z80.Registers exposing (..)
 {-| Decodes an instruction, returning a tuple of the `Op` and
 how many `Cycle`'s' it will take.
 -}
-decode : Int -> ( Op, Cycles )
-decode code =
-    case code of
+decode : Byte -> ( Op, Cycles )
+decode b =
+    case Byte.toInt b of
         0x01 ->
             LDW (LW.IntoRegister BC) LW.FromData @ 12
 
@@ -777,6 +778,64 @@ decode code =
 
         0xFF ->
             RST 0x38 @ 16
+
+        b ->
+            INVALID b @ 0
+
+
+{-| Decodes a CB instruction, returning a tuple of the `Op` and
+how many `Cycle`'s' it will take.
+-}
+decodeCB : Byte -> ( Op, Cycles )
+decodeCB b =
+    case Byte.toInt b of
+        0x00 ->
+            RLC (OnRegister B) @ 8
+
+        0x01 ->
+            RLC (OnRegister C) @ 8
+
+        0x02 ->
+            RLC (OnRegister D) @ 8
+
+        0x03 ->
+            RLC (OnRegister E) @ 8
+
+        0x04 ->
+            RLC (OnRegister H) @ 8
+
+        0x05 ->
+            RLC (OnRegister L) @ 8
+
+        0x06 ->
+            RLC OnMemHL @ 16
+
+        0x07 ->
+            RLC (OnRegister A) @ 8
+
+        0x08 ->
+            RRC (OnRegister B) @ 8
+
+        0x09 ->
+            RRC (OnRegister C) @ 8
+
+        0x0A ->
+            RRC (OnRegister D) @ 8
+
+        0x0B ->
+            RRC (OnRegister E) @ 8
+
+        0x0C ->
+            RRC (OnRegister H) @ 8
+
+        0x0D ->
+            RRC (OnRegister L) @ 8
+
+        0x0E ->
+            RRC OnMemHL @ 16
+
+        0x0F ->
+            RRC (OnRegister A) @ 8
 
         b ->
             INVALID b @ 0

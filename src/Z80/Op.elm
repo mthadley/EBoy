@@ -24,6 +24,13 @@ type Param
     | WithData
 
 
+{-| Target for a CB operation (`Bit`, `Set`, etc.).
+-}
+type CBParam
+    = OnRegister ByteRegister
+    | OnMemHL
+
+
 {-| Flags checked by jump instructions.
 -}
 type JumpFlag
@@ -93,3 +100,5 @@ type Op
     | RETI
     | DI
     | EI
+    | RLC CBParam
+    | RRC CBParam
