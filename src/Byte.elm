@@ -43,6 +43,8 @@ fromInt =
 {-| Converts a `Byte` to an `Int`.
 
     (fromInt 3 |> toInt) == 3
+
+Guarenteed to be in the range: 0 <= n < 2^8
 -}
 toInt : Byte -> Int
 toInt (Byte b) =

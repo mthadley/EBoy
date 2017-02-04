@@ -104,3 +104,10 @@ type Op
     | RRC CBParam
     | RL CBParam
     | RR CBParam
+    | SLA CBParam
+    | SRA CBParam
+    | SWAP CBParam
+    | SRL CBParam
+    | BIT Int CBParam
+    | RES Int CBParam
+    | SET Int CBParam

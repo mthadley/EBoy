@@ -795,21 +795,110 @@ decodeCB byte =
         b =
             Byte.toInt byte
     in
-        case b // 8 of
-            0 ->
-                decodeCBWith RLC b
+        decodeCBWith (decodeCBOp b) b
 
-            1 ->
-                decodeCBWith RRC b
 
-            2 ->
-                decodeCBWith RL b
+decodeCBOp : Int -> (CBParam -> Op)
+decodeCBOp code =
+    case code // 8 of
+        0 ->
+            RLC
 
-            3 ->
-                decodeCBWith RR b
+        1 ->
+            RRC
 
-            b ->
-                INVALID b @ 0
+        2 ->
+            RL
+
+        3 ->
+            RR
+
+        4 ->
+            SLA
+
+        5 ->
+            SRA
+
+        6 ->
+            SWAP
+
+        7 ->
+            SRL
+
+        8 ->
+            BIT 0
+
+        9 ->
+            BIT 1
+
+        10 ->
+            BIT 2
+
+        11 ->
+            BIT 3
+
+        12 ->
+            BIT 4
+
+        13 ->
+            BIT 5
+
+        14 ->
+            BIT 6
+
+        15 ->
+            BIT 7
+
+        16 ->
+            RES 0
+
+        17 ->
+            RES 1
+
+        18 ->
+            RES 2
+
+        19 ->
+            RES 3
+
+        20 ->
+            RES 4
+
+        21 ->
+            RES 5
+
+        22 ->
+            RES 6
+
+        23 ->
+            RES 7
+
+        24 ->
+            SET 0
+
+        25 ->
+            SET 1
+
+        26 ->
+            SET 2
+
+        27 ->
+            SET 3
+
+        28 ->
+            SET 4
+
+        29 ->
+            SET 5
+
+        30 ->
+            SET 6
+
+        31 ->
+            SET 7
+
+        b ->
+            always <| INVALID b
 
 
 decodeCBWith : (CBParam -> Op) -> Int -> ( Op, Cycles )
