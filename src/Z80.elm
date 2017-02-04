@@ -1,7 +1,8 @@
 module Z80 exposing (..)
 
-import Array exposing (Array)
 import Byte exposing (Byte)
+import Memory exposing (Memory)
+import Word exposing (Word)
 import Z80.Registers exposing (..)
 
 
@@ -10,7 +11,7 @@ import Z80.Registers exposing (..)
 type alias State =
     { clock : Clock
     , registers : Registers
-    , memory : Array Byte
+    , memory : Memory
     }
 
 
@@ -29,6 +30,6 @@ type alias Registers =
     , h : Byte
     , l : Byte
     , f : Byte
-    , pc : Int {- 16-bit registers -}
-    , sp : Int
+    , pc : Word {- 16-bit registers -}
+    , sp : Word
     }
