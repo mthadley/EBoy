@@ -1,0 +1,107 @@
+module Word
+    exposing
+        ( Word
+        , fromInt
+        , toInt
+        , fromByte
+        , fromBytes
+        , toBytes
+        , add
+        , sub
+        , inc
+        , dec
+        )
+
+import Bitwise
+import Byte exposing (Byte)
+
+
+{-| Opaque type representing a 16-bit word.
+-}
+type Word
+    = Word Int
+
+
+{-| Converts an `Int` to a `Word`.
+
+    fromInt 1200 : Word
+-}
+fromInt : Int -> Word
+fromInt =
+    Word << mod
+
+
+{-| Converts a `Byte` to a `Word`.
+-}
+fromByte : Byte -> Word
+fromByte =
+    Word << Byte.toInt
+
+
+{-| Converts two `Byte`s to a `Word`. The first `Byte`
+represents the higher 8 bits, and the second the lower
+8 bits.
+-}
+fromBytes : Byte -> Byte -> Word
+fromBytes high low =
+    Bitwise.shiftLeftBy 8 (Byte.toInt high)
+        |> Bitwise.or (Byte.toInt low)
+        |> Word
+
+
+{-| Converts a `Word` to a tuple of `Byte`s. The first
+`Byte` represents the 8 high bits, and the second represents
+the low 8 bits.
+-}
+toBytes : Word -> ( Byte, Byte )
+toBytes (Word w) =
+    ( Bitwise.shiftRightZfBy 8 w
+        |> mask
+        |> Byte.fromInt
+    , Byte.fromInt <| mask w
+    )
+
+
+{-| Adds two `Word`s.
+-}
+add : Word -> Word -> Word
+add (Word w) (Word x) =
+    Word <| mask <| w + x
+
+
+{-| Subtracts the second `Word` from the first.
+-}
+sub : Word -> Word -> Word
+sub (Word w) (Word x) =
+    Word <| mask <| w - x
+
+
+{-| Increments a `Word`.
+-}
+inc : Word -> Word
+inc (Word w) =
+    Word <| mask <| w + 1
+
+
+{-| Decrements a `Word`.
+-}
+dec : Word -> Word
+dec (Word w) =
+    Word <| mask <| w - 1
+
+
+{-| Converts a `Word` back to an `Int`.
+-}
+toInt : Word -> Int
+toInt (Word w) =
+    w
+
+
+mod : Int -> Int
+mod n =
+    n % 65536
+
+
+mask : Int -> Int
+mask =
+    Bitwise.and 0xFF

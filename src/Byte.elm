@@ -22,11 +22,15 @@ module Byte
         , sub
         , subc
         , toInt
+        , inc
+        , dec
         )
 
 import Bitwise
 
 
+{-| Opaque type representing ab 8-bit byte.
+-}
 type Byte
     = Byte Int
 
@@ -96,6 +100,20 @@ subc (Byte x) (Byte y) =
         ( diff < 0
         , Byte <| mod <| diff + 256
         )
+
+
+{-| Increment a Byte.
+-}
+inc : Byte -> Byte
+inc (Byte b) =
+    Byte <| mask <| b + 1
+
+
+{-| Decrement a Byte.
+-}
+dec : Byte -> Byte
+dec (Byte b) =
+    Byte <| mask <| b - 1
 
 
 {-| Returns a `Bool` indicating whether or not the most significant
