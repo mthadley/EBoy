@@ -1,4 +1,4 @@
-module Z80.Decode exposing (decode, decodeCB)
+module Z80.Decode exposing (Cycles(..), decode, decodeCB, isCB)
 
 import Bitwise
 import Byte exposing (Byte)
@@ -931,6 +931,18 @@ decodeCBWith op code =
                     ( OnRegister A, 8 )
     in
         op param @ cycles
+
+
+{-| Returns `True` if the operation is the `PREFIX_CB`.
+-}
+isCB : Op -> Bool
+isCB op =
+    case op of
+        PREFIX_CB ->
+            True
+
+        _ ->
+            False
 
 
 none : ( Op, Cycles )

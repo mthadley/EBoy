@@ -10,8 +10,6 @@ type ByteRegister
     | H
     | L
     | F
-    | M
-    | T
 
 
 type WordRegister
