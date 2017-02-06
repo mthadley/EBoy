@@ -6,6 +6,7 @@ import Word exposing (Word)
 import Z80.Decode as Decode exposing (Cycles(..))
 import Z80.Flag as Flag
 import Z80.LB as LB
+import Z80.LO as LO
 import Z80.Op exposing (..)
 import Z80.Registers exposing (..)
 import Z80.State as State exposing (State)
@@ -66,8 +67,49 @@ executeOp op state =
         LD target source ->
             writeLBTarget target <| readLBSource source state
 
+        LDH target source ->
+            writeLOTarget target <| readLOSource source state
+
         _ ->
             state
+
+
+
+-- LO
+
+
+readLOSource : LO.Source -> State -> ( Byte, State )
+readLOSource source state =
+    case source of
+        LO.FromRegisterA ->
+            ( readByteRegister A state, state )
+
+        LO.FromMemDataOffset ->
+            ( readMemDataOffset state, incPC state )
+
+        LO.FromMemCOffset ->
+            ( readMemRegisterOffset C state, state )
+
+
+writeLOTarget : LO.Target -> ( Byte, State ) -> State
+writeLOTarget target ( byte, state ) =
+    case target of
+        LO.IntoRegisterA ->
+            writeRegisterByte byte A state
+
+        LO.IntoMemDataOffset ->
+            let
+                word =
+                    wordOffset <| readDataByte state
+            in
+                incPC <| writeMemWord byte word state
+
+        LO.IntoMemCOffset ->
+            let
+                word =
+                    wordOffset <| readByteRegister C state
+            in
+                writeMemWord byte word state
 
 
 
@@ -163,6 +205,20 @@ readMemRegister wordRegister state =
     Memory.readByte (readWordRegister wordRegister state) state.memory
 
 
+readMemRegisterOffset : ByteRegister -> State -> Byte
+readMemRegisterOffset register state =
+    let
+        word =
+            wordOffset <| readByteRegister register state
+    in
+        Memory.readByte word state.memory
+
+
+readMemDataOffset : State -> Byte
+readMemDataOffset state =
+    Memory.readByte (wordOffset <| readDataByte state) state.memory
+
+
 readWordRegister : WordRegister -> State -> Word
 readWordRegister wordRegister state =
     case wordRegister of
@@ -235,3 +291,8 @@ addPC n state =
 incPC : State -> State
 incPC =
     addPC 1
+
+
+wordOffset : Byte -> Word
+wordOffset =
+    Word.add (Word.fromInt 0xFF00) << Word.fromByte
