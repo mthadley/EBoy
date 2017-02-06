@@ -3,10 +3,11 @@ module Z80 exposing (..)
 import Byte exposing (Byte)
 import Memory exposing (Memory)
 import Word exposing (Word)
-import Z80.Registers exposing (..)
 import Z80.Decode as Decode exposing (Cycles(..))
-import Z80.Op exposing (..)
+import Z80.Flag as Flag
 import Z80.LB as LB
+import Z80.Op exposing (..)
+import Z80.Registers exposing (..)
 import Z80.State as State exposing (State)
 
 

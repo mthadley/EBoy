@@ -2,11 +2,13 @@ module Byte
     exposing
         ( Byte
         , add
+        , and
         , addc
         , fromInt
         , getBit
         , lsbSet
         , msbSet
+        , or
         , reset
         , rotateLeft
         , rotateLeftBy
@@ -60,6 +62,20 @@ toInt (Byte b) =
 add : Byte -> Byte -> Byte
 add a b =
     Tuple.second <| addc a b
+
+
+{-| Bitwise and two `Byte`s.
+-}
+and : Byte -> Byte -> Byte
+and (Byte a) (Byte b) =
+    Byte <| Bitwise.and a b
+
+
+{-| Bitwise or two `Byte`s.
+-}
+or : Byte -> Byte -> Byte
+or (Byte a) (Byte b) =
+    Byte <| Bitwise.or a b
 
 
 {-| Adds two `Byte`s, returning a tuple of the sum and a
