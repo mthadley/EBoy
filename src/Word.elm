@@ -56,10 +56,8 @@ the lower 8 bits.
 -}
 toBytes : Word -> ( Byte, Byte )
 toBytes (Word w) =
-    ( Bitwise.shiftRightZfBy 8 w
-        |> mask
-        |> Byte.fromInt
-    , Byte.fromInt <| mask w
+    ( Byte.fromInt <| Bitwise.shiftRightZfBy 8 w
+    , Byte.fromInt w
     )
 
 
@@ -93,21 +91,21 @@ addc (Word a) (Word b) =
 -}
 sub : Word -> Word -> Word
 sub (Word w) (Word x) =
-    Word <| mask <| w - x
+    fromInt <| w - x
 
 
 {-| Increments a `Word`.
 -}
 inc : Word -> Word
 inc (Word w) =
-    Word <| mask <| w + 1
+    fromInt <| w + 1
 
 
 {-| Decrements a `Word`.
 -}
 dec : Word -> Word
 dec (Word w) =
-    Word <| mask <| w - 1
+    fromInt <| w - 1
 
 
 {-| Converts a `Word` back to an `Int`.
