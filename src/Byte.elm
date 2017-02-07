@@ -50,7 +50,7 @@ fromInt =
 
     (fromInt 3 |> toInt) == 3
 
-Guarenteed to be in the range: 0 <= n < 2^8
+Guaranteed to be in the range: 0 <= n < 2^8
 -}
 toInt : Byte -> Int
 toInt (Byte b) =
@@ -152,7 +152,7 @@ lsbSet =
     getBit 0
 
 
-{-| Returns a  `Bool` indicating wether or not the bit is set.
+{-| Returns a  `Bool` indicating whether or not the bit is set.
 -}
 getBit : Int -> Byte -> Bool
 getBit n (Byte b) =
