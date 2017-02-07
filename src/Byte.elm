@@ -25,6 +25,7 @@ module Byte
         , subc
         , toInt
         , inc
+        , incc
         , dec
         )
 
@@ -127,6 +128,17 @@ subc (Byte x) (Byte y) =
 inc : Byte -> Byte
 inc byte =
     add byte <| fromInt 1
+
+
+{-| Increment a Byte, also returning a `Bool` indicating if there was a half-carry.
+-}
+incc : Byte -> ( Bool, Byte )
+incc byte =
+    let
+        ( _, halfCarry, result ) =
+            addc byte <| fromInt 1
+    in
+        ( halfCarry, result )
 
 
 {-| Decrement a Byte.
