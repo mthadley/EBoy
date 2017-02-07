@@ -13,15 +13,6 @@ import Z80.Registers exposing (..)
 import Z80.State as State exposing (State)
 
 
-{- Module handles advancing the state of the CPU.
-
-   A few notes about the PC (Program Counter). The pc is updated as needed, as
-   opposed to at the end when the instruction has finished processing. This mean's
-   that the PC can be advanced (and state propagated) in `decodeIfCB`,
-       `readData{Word|Byte}`, etc.
--}
-
-
 next : State -> State
 next =
     execute << decode << fetch
@@ -111,22 +102,24 @@ readLWSource source state =
             ( readWordRegister register state, state )
 
         LW.FromData ->
-            ( readDataWord state, addPC 2 state )
+            readDataWord state
 
         LW.FromSPByteData ->
             let
+                ( byte, newState ) =
+                    readDataByte state
+
                 ( carry, halfCarry, result ) =
                     Word.addc
                         (readWordRegister SP state)
-                        (Word.fromByte <| readDataByte state)
+                        (Word.fromByte byte)
             in
                 ( result
-                , state
-                    |> setFlagsWith
-                        [ ( Flag.Carry, carry )
-                        , ( Flag.HalfCarry, halfCarry )
-                        ]
-                    |> incPC
+                , setFlagsWith
+                    [ ( Flag.Carry, carry )
+                    , ( Flag.HalfCarry, halfCarry )
+                    ]
+                    state
                 )
 
 
@@ -137,7 +130,11 @@ writeLWTarget target ( word, state ) =
             writeWordRegister word register state
 
         LW.IntoMemData ->
-            addPC 2 <| writeMemWord (readDataWord state) word state
+            let
+                ( addr, newState ) =
+                    readDataWord state
+            in
+                writeMemWord addr word newState
 
 
 
@@ -151,7 +148,7 @@ readLOSource source state =
             ( readByteRegister A state, state )
 
         LO.FromMemDataOffset ->
-            ( readMemDataOffset state, incPC state )
+            readMemDataOffset state
 
         LO.FromMemCOffset ->
             ( readMemRegisterOffset C state, state )
@@ -165,17 +162,17 @@ writeLOTarget target ( byte, state ) =
 
         LO.IntoMemDataOffset ->
             let
-                word =
-                    wordOffset <| readDataByte state
+                ( byte, newState ) =
+                    readDataByte state
             in
-                incPC <| writeMemByte byte word state
+                writeMemByte (wordOffset byte) byte newState
 
         LO.IntoMemCOffset ->
             let
-                word =
+                addr =
                     wordOffset <| readByteRegister C state
             in
-                writeMemByte byte word state
+                writeMemByte addr byte state
 
 
 
@@ -192,7 +189,7 @@ readLBSource source state =
             ( readMemRegister register state, state )
 
         LB.FromData ->
-            ( readDataByte state, incPC state )
+            readDataByte state
 
 
 writeLBTarget : LB.Target -> ( Byte, State ) -> State
@@ -205,30 +202,34 @@ writeLBTarget target ( byte, state ) =
             writeMemRegister byte register state
 
         LB.IntoMemData ->
-            addPC 2 <| writeMemByte byte (readDataWord state) state
+            let
+                ( addr, newState ) =
+                    readDataWord state
+            in
+                writeMemByte addr byte newState
 
 
 
 -- Modifying State
 
 
-writeMemByte : Byte -> Word -> State -> State
-writeMemByte byte loc state =
-    { state | memory = Memory.writeByte loc byte state.memory }
+writeMemByte : Word -> Byte -> State -> State
+writeMemByte addr byte state =
+    { state | memory = Memory.writeByte addr byte state.memory }
 
 
 writeMemWord : Word -> Word -> State -> State
-writeMemWord word loc state =
-    { state | memory = Memory.writeWord loc word state.memory }
+writeMemWord addr word state =
+    { state | memory = Memory.writeWord addr word state.memory }
 
 
 writeMemRegister : Byte -> WordRegister -> State -> State
 writeMemRegister byte wordRegister state =
     let
-        word =
+        addr =
             readWordRegister wordRegister state
     in
-        writeMemByte byte word state
+        writeMemByte addr byte state
 
 
 writeByteRegister : Byte -> ByteRegister -> State -> State
@@ -297,16 +298,22 @@ writeWordRegister word register state =
                 { state | d = high, e = low }
 
 
-readDataWord : State -> Word
+readDataWord : State -> ( Word, State )
 readDataWord state =
-    Word.fromBytes
-        (readDataByte <| incPC state)
-        (readDataByte state)
+    ( Memory.readWord state.pc state.memory
+    , addPC 2 state
+    )
 
 
-readDataByte : State -> Byte
-readDataByte { memory, pc } =
-    Memory.readByte (Word.inc pc) memory
+readDataByte : State -> ( Byte, State )
+readDataByte state =
+    let
+        newState =
+            incPC state
+    in
+        ( Memory.readByte newState.pc newState.memory
+        , newState
+        )
 
 
 readMemRegister : WordRegister -> State -> Byte
@@ -317,15 +324,21 @@ readMemRegister wordRegister state =
 readMemRegisterOffset : ByteRegister -> State -> Byte
 readMemRegisterOffset register state =
     let
-        word =
+        addr =
             wordOffset <| readByteRegister register state
     in
-        Memory.readByte word state.memory
+        Memory.readByte addr state.memory
 
 
-readMemDataOffset : State -> Byte
+readMemDataOffset : State -> ( Byte, State )
 readMemDataOffset state =
-    Memory.readByte (wordOffset <| readDataByte state) state.memory
+    let
+        ( byte, newState ) =
+            readDataByte state
+    in
+        ( Memory.readByte (wordOffset byte) state.memory
+        , newState
+        )
 
 
 readWordRegister : WordRegister -> State -> Word

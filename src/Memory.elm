@@ -31,8 +31,8 @@ init =
 the memory location to read from.
 -}
 readByte : Word -> Memory -> Byte
-readByte loc (Memory array) =
-    Word.toInt loc
+readByte addr (Memory array) =
+    Word.toInt addr
         |> get array
         |> Maybe.withDefault (Byte.fromInt 0)
 
@@ -41,32 +41,32 @@ readByte loc (Memory array) =
 the memory location to read from.
 -}
 readWord : Word -> Memory -> Word
-readWord loc memory =
+readWord addr memory =
     Word.fromBytes
-        (readByte (Word.inc loc) memory)
-        (readByte loc memory)
+        (readByte (Word.inc addr) memory)
+        (readByte addr memory)
 
 
 {-| Writes a `Byte` to memory. Takes a `Word` indicating
 the memory location to write to.
 -}
 writeByte : Word -> Byte -> Memory -> Memory
-writeByte loc val (Memory array) =
-    Memory <| Array.set (Word.toInt loc) val array
+writeByte addr val (Memory array) =
+    Memory <| Array.set (Word.toInt addr) val array
 
 
 {-| Writes a `Word` to memory. Takes a `Word` indicating
 the memory location to write to.
 -}
 writeWord : Word -> Word -> Memory -> Memory
-writeWord loc val memory =
+writeWord addr val memory =
     let
         ( high, low ) =
             Word.toBytes val
     in
         memory
-            |> writeByte loc low
-            |> writeByte (Word.inc loc) high
+            |> writeByte addr low
+            |> writeByte (Word.inc addr) high
 
 
 get : Array a -> Int -> Maybe a
