@@ -7,6 +7,7 @@ module Word
         , fromBytes
         , toBytes
         , add
+        , addc
         , sub
         , inc
         , dec
@@ -28,7 +29,7 @@ type Word
 -}
 fromInt : Int -> Word
 fromInt =
-    Word << mod
+    Word << mask
 
 
 {-| Converts a `Byte` to a `Word`.
@@ -51,7 +52,7 @@ fromBytes high low =
 
 {-| Converts a `Word` to a tuple of `Byte`s. The first
 `Byte` represents the 8 high bits, and the second represents
-the low 8 bits.
+the lower 8 bits.
 -}
 toBytes : Word -> ( Byte, Byte )
 toBytes (Word w) =
@@ -65,8 +66,27 @@ toBytes (Word w) =
 {-| Adds two `Word`s.
 -}
 add : Word -> Word -> Word
-add (Word w) (Word x) =
-    Word <| mask <| w + x
+add a b =
+    let
+        ( _, _, result ) =
+            addc a b
+    in
+        result
+
+
+{-| Adds two `Word`s, and returns a tuple where the the first two
+booleans represent whether there was a carry and a half carry, respectively.
+-}
+addc : Word -> Word -> ( Bool, Bool, Word )
+addc (Word a) (Word b) =
+    let
+        result =
+            a + b
+    in
+        ( result > 0xFFFF
+        , Bitwise.and ((maskLower a) + (maskLower b)) 0x1000 > 0
+        , fromInt result
+        )
 
 
 {-| Subtracts the second `Word` from the first.
@@ -97,11 +117,11 @@ toInt (Word w) =
     w
 
 
-mod : Int -> Int
-mod n =
-    n % 65536
-
-
 mask : Int -> Int
 mask =
-    Bitwise.and 0xFF
+    Bitwise.and 0xFFFF
+
+
+maskLower : Int -> Int
+maskLower =
+    Bitwise.and 0x0FFF

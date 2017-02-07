@@ -2,6 +2,7 @@ module Z80.Flag
     exposing
         ( Flag(..)
         , set
+        , setWith
         , reset
         , setFlag
         , resetFlag
@@ -25,6 +26,21 @@ type Flag
 set : List Flag -> Byte -> Byte
 set flags byte =
     List.foldr setFlag byte flags
+
+
+{-| Takes a tuple list of `Flag`s and `Bool`, where the flag will be set
+or reset based on the `Bool`.
+-}
+setWith : List ( Flag, Bool ) -> Byte -> Byte
+setWith flags byte =
+    let
+        setOrReset ( flag, shouldSet ) byte =
+            if shouldSet then
+                setFlag flag byte
+            else
+                resetFlag flag byte
+    in
+        List.foldr setOrReset byte flags
 
 
 {-| Resets the `Flag`s in the `Byte`.

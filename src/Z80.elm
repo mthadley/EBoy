@@ -4,12 +4,22 @@ import Byte exposing (Byte)
 import Memory exposing (Memory)
 import Word exposing (Word)
 import Z80.Decode as Decode exposing (Cycles(..))
-import Z80.Flag as Flag
+import Z80.Flag as Flag exposing (Flag)
 import Z80.LB as LB
 import Z80.LO as LO
+import Z80.LW as LW
 import Z80.Op exposing (..)
 import Z80.Registers exposing (..)
 import Z80.State as State exposing (State)
+
+
+{- Module handles advancing the state of the CPU.
+
+   A few notes about the PC (Program Counter). The pc is updated as needed, as
+   opposed to at the end when the instruction has finished processing. This mean's
+   that the PC can be advanced (and state propagated) in `decodeIfCB`,
+       `readData{Word|Byte}`, etc.
+-}
 
 
 next : State -> State
@@ -27,23 +37,30 @@ fetch state =
 decode : ( Byte, State ) -> ( Op, Cycles, State )
 decode ( byte, state ) =
     let
-        ( op, cycles ) =
+        ( op, cycles, newState ) =
             decodeIfCB state <| Decode.decode byte
     in
         ( op
         , cycles
-        , state
+        , newState
         )
 
 
-decodeIfCB : State -> ( Op, Cycles ) -> ( Op, Cycles )
+decodeIfCB : State -> ( Op, Cycles ) -> ( Op, Cycles, State )
 decodeIfCB state ( op, cycles ) =
     if Decode.isCB op then
-        fetch (incPC state)
-            |> Tuple.first
-            |> Decode.decodeCB
+        let
+            newState =
+                incPC state
+
+            ( newOp, newCycles ) =
+                fetch newState
+                    |> Tuple.first
+                    |> Decode.decodeCB
+        in
+            ( newOp, newCycles, newState )
     else
-        ( op, cycles )
+        ( op, cycles, state )
 
 
 execute : ( Op, Cycles, State ) -> State
@@ -59,19 +76,68 @@ executeOp op state =
             Debug.crash <| toString x
 
         NONE ->
-            state
+            incPC <| state
 
         NOP ->
-            state
+            incPC <| state
 
         LD target source ->
-            writeLBTarget target <| readLBSource source state
+            readLBSource source state
+                |> writeLBTarget target
+                |> incPC
 
         LDH target source ->
-            writeLOTarget target <| readLOSource source state
+            readLOSource source state
+                |> writeLOTarget target
+                |> incPC
+
+        LDW target source ->
+            readLWSource source state
+                |> writeLWTarget target
+                |> incPC
 
         _ ->
             state
+
+
+
+-- LW
+
+
+readLWSource : LW.Source -> State -> ( Word, State )
+readLWSource source state =
+    case source of
+        LW.FromRegister register ->
+            ( readWordRegister register state, state )
+
+        LW.FromData ->
+            ( readDataWord state, addPC 2 state )
+
+        LW.FromSPByteData ->
+            let
+                ( carry, halfCarry, result ) =
+                    Word.addc
+                        (readWordRegister SP state)
+                        (Word.fromByte <| readDataByte state)
+            in
+                ( result
+                , state
+                    |> setFlagsWith
+                        [ ( Flag.Carry, carry )
+                        , ( Flag.HalfCarry, halfCarry )
+                        ]
+                    |> incPC
+                )
+
+
+writeLWTarget : LW.Target -> ( Word, State ) -> State
+writeLWTarget target ( word, state ) =
+    case target of
+        LW.IntoRegister register ->
+            writeWordRegister word register state
+
+        LW.IntoMemData ->
+            addPC 2 <| writeMemWord (readDataWord state) word state
 
 
 
@@ -95,21 +161,21 @@ writeLOTarget : LO.Target -> ( Byte, State ) -> State
 writeLOTarget target ( byte, state ) =
     case target of
         LO.IntoRegisterA ->
-            writeRegisterByte byte A state
+            writeByteRegister byte A state
 
         LO.IntoMemDataOffset ->
             let
                 word =
                     wordOffset <| readDataByte state
             in
-                incPC <| writeMemWord byte word state
+                incPC <| writeMemByte byte word state
 
         LO.IntoMemCOffset ->
             let
                 word =
                     wordOffset <| readByteRegister C state
             in
-                writeMemWord byte word state
+                writeMemByte byte word state
 
 
 
@@ -133,22 +199,27 @@ writeLBTarget : LB.Target -> ( Byte, State ) -> State
 writeLBTarget target ( byte, state ) =
     case target of
         LB.IntoRegister register ->
-            writeRegisterByte byte register state
+            writeByteRegister byte register state
 
         LB.IntoMem register ->
             writeMemRegister byte register state
 
         LB.IntoMemData ->
-            incPC <| writeMemWord byte (readDataWord state) state
+            addPC 2 <| writeMemByte byte (readDataWord state) state
 
 
 
 -- Modifying State
 
 
-writeMemWord : Byte -> Word -> State -> State
-writeMemWord byte word state =
-    { state | memory = Memory.writeByte word byte state.memory }
+writeMemByte : Byte -> Word -> State -> State
+writeMemByte byte loc state =
+    { state | memory = Memory.writeByte loc byte state.memory }
+
+
+writeMemWord : Word -> Word -> State -> State
+writeMemWord word loc state =
+    { state | memory = Memory.writeWord loc word state.memory }
 
 
 writeMemRegister : Byte -> WordRegister -> State -> State
@@ -157,11 +228,11 @@ writeMemRegister byte wordRegister state =
         word =
             readWordRegister wordRegister state
     in
-        writeMemWord byte word state
+        writeMemByte byte word state
 
 
-writeRegisterByte : Byte -> ByteRegister -> State -> State
-writeRegisterByte byte register state =
+writeByteRegister : Byte -> ByteRegister -> State -> State
+writeByteRegister byte register state =
     case register of
         A ->
             { state | a = byte }
@@ -186,6 +257,44 @@ writeRegisterByte byte register state =
 
         F ->
             { state | f = byte }
+
+
+writeWordRegister : Word -> WordRegister -> State -> State
+writeWordRegister word register state =
+    case register of
+        PC ->
+            { state | pc = word }
+
+        SP ->
+            { state | sp = word }
+
+        BC ->
+            let
+                ( high, low ) =
+                    Word.toBytes word
+            in
+                { state | b = high, c = low }
+
+        HL ->
+            let
+                ( high, low ) =
+                    Word.toBytes word
+            in
+                { state | h = high, l = low }
+
+        DE ->
+            let
+                ( high, low ) =
+                    Word.toBytes word
+            in
+                { state | d = high, e = low }
+
+        AF ->
+            let
+                ( high, low ) =
+                    Word.toBytes word
+            in
+                { state | d = high, e = low }
 
 
 readDataWord : State -> Word
@@ -296,3 +405,13 @@ incPC =
 wordOffset : Byte -> Word
 wordOffset =
     Word.add (Word.fromInt 0xFF00) << Word.fromByte
+
+
+setFlagsWith : List ( Flag, Bool ) -> State -> State
+setFlagsWith flags =
+    updateFlags <| Flag.setWith flags
+
+
+updateFlags : (Byte -> Byte) -> State -> State
+updateFlags func state =
+    { state | f = func state.f }

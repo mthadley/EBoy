@@ -43,7 +43,7 @@ type Byte
 -}
 fromInt : Int -> Byte
 fromInt =
-    Byte << mod
+    Byte << mask
 
 
 {-| Converts a `Byte` to an `Int`.
@@ -61,7 +61,11 @@ toInt (Byte b) =
 -}
 add : Byte -> Byte -> Byte
 add a b =
-    Tuple.second <| addc a b
+    let
+        ( _, _, sum ) =
+            addc a b
+    in
+        sum
 
 
 {-| Bitwise and two `Byte`s.
@@ -78,19 +82,19 @@ or (Byte a) (Byte b) =
     Byte <| Bitwise.or a b
 
 
-{-| Adds two `Byte`s, returning a tuple of the sum and a
-`Bool` indicating whether or not there was overflow.
-
-    addc (fromInt 5) (fromInt 3) == ( False, fromInt 8 )
-    addc (fromInt 254) (fromInt 3) == ( True, fromInt 2 )
+{-| Adds two `Byte`s, returning a tuple of the sum and two `Bool`s indicating
+if there was carry and half carry, respectively.
 -}
-addc : Byte -> Byte -> ( Bool, Byte )
+addc : Byte -> Byte -> ( Bool, Bool, Byte )
 addc (Byte x) (Byte y) =
     let
         sum =
             x + y
     in
-        ( sum > 255, Byte <| mod sum )
+        ( sum > 255
+        , Bitwise.and ((maskLower x) + (maskLower y)) 0x10 > 0
+        , fromInt sum
+        )
 
 
 {-| Subtracts the second `Byte` from the first.
@@ -114,22 +118,22 @@ subc (Byte x) (Byte y) =
             x - y
     in
         ( diff < 0
-        , Byte <| mod <| diff + 256
+        , fromInt <| diff + 256
         )
 
 
 {-| Increment a Byte.
 -}
 inc : Byte -> Byte
-inc (Byte b) =
-    Byte <| mask <| b + 1
+inc byte =
+    add byte <| fromInt 1
 
 
 {-| Decrement a Byte.
 -}
 dec : Byte -> Byte
-dec (Byte b) =
-    Byte <| mask <| b - 1
+dec byte =
+    add byte <| fromInt -1
 
 
 {-| Returns a `Bool` indicating whether or not the most significant
@@ -274,11 +278,11 @@ rotate left n (Byte b) =
                 (Bitwise.shiftRightZfBy rightTimes b)
 
 
-mod : Int -> Int
-mod n =
-    n % 256
-
-
 mask : Int -> Int
 mask =
     Bitwise.and 0xFF
+
+
+maskLower : Int -> Int
+maskLower =
+    Bitwise.and 0x0F
