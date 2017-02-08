@@ -15,6 +15,9 @@ how many `Cycle`'s' it will take.
 decode : Byte -> ( Op, Cycles )
 decode b =
     case Byte.toInt b of
+        0x00 ->
+            NOP @ 4
+
         0x01 ->
             LDW (LW.IntoRegister BC) LW.FromData @ 12
 
