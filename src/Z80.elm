@@ -456,6 +456,11 @@ wordOffset =
     Word.add (Word.fromInt 0xFF00) << Word.fromByte
 
 
+resetFlags : List Flag -> State -> State
+resetFlags flags =
+    updateFlags <| Flag.reset flags
+
+
 setFlagsWith : List ( Flag, Bool ) -> State -> State
 setFlagsWith flags =
     updateFlags <| Flag.setWith flags
