@@ -1,16 +1,22 @@
 module Word
     exposing
         ( Word
-        , fromInt
-        , toInt
-        , fromByte
-        , fromBytes
-        , toBytes
+        , Result
         , add
         , addc
-        , sub
-        , inc
         , dec
+        , fromByte
+        , fromBytes
+        , fromInt
+        , hasCarry
+        , hasHalfCarry
+        , inc
+        , isZero
+        , resultToInt
+        , resultToWord
+        , sub
+        , toBytes
+        , toInt
         )
 
 import Bitwise
@@ -21,6 +27,52 @@ import Byte exposing (Byte)
 -}
 type Word
     = Word Int
+
+
+{-| Opaque type representing the result of an arithmetic operation.
+-}
+type Result
+    = Result
+        { carry : Bool
+        , halfCarry : Bool
+        , word : Word
+        }
+
+
+{-| Converts a `Result` to a `Word`.
+-}
+resultToWord : Result -> Word
+resultToWord (Result r) =
+    r.word
+
+
+{-| Converts a `Result` to an `Int`.
+-}
+resultToInt : Result -> Int
+resultToInt (Result r) =
+    toInt r.word
+
+
+{-| Returns `True` if there was a carry from the resulting operation.
+-}
+hasCarry : Result -> Bool
+hasCarry (Result r) =
+    r.carry
+
+
+{-| Returns `True` if the `Byte` is zero.
+-}
+isZero : Word -> Bool
+isZero =
+    (==) 0 << toInt
+
+
+{-| Returns `True` if there was a half carry from the resulting
+operation.
+-}
+hasHalfCarry : Result -> Bool
+hasHalfCarry (Result r) =
+    r.halfCarry
 
 
 {-| Converts an `Int` to a `Word`.
@@ -65,26 +117,25 @@ toBytes (Word w) =
 -}
 add : Word -> Word -> Word
 add a b =
-    let
-        ( _, _, result ) =
-            addc a b
-    in
-        result
+    resultToWord <| addc a b
 
 
-{-| Adds two `Word`s, and returns a tuple where the the first two
-booleans represent whether there was a carry and a half carry, respectively.
+{-| Adds two `Word`s, and returns a `Result`.
 -}
-addc : Word -> Word -> ( Bool, Bool, Word )
+addc : Word -> Word -> Result
 addc (Word a) (Word b) =
     let
-        result =
+        sum =
             a + b
+
+        halfCarry =
+            Bitwise.and ((maskLower a) + (maskLower b)) 0x1000 > 0
     in
-        ( result > 0xFFFF
-        , Bitwise.and ((maskLower a) + (maskLower b)) 0x1000 > 0
-        , fromInt result
-        )
+        Result
+            { carry = sum > 0xFFFF
+            , halfCarry = halfCarry
+            , word = fromInt sum
+            }
 
 
 {-| Subtracts the second `Word` from the first.

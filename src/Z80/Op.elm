@@ -18,15 +18,15 @@ type JumpTarget
 
 {-| Param for arithmetic operations (`ADD`, `SUB`, etc.).
 -}
-type Param
+type ParamData
     = WithRegister ByteRegister
     | WithMemHL
     | WithData
 
 
-{-| Target for a CB operation (`Bit`, `Set`, etc.).
+{-| Target for a unary operation (`Bit`, `Set`, etc.).
 -}
-type CBParam
+type Param
     = OnRegister ByteRegister
     | OnMemHL
 
@@ -65,11 +65,11 @@ type Op
     | LDW LW.Target LW.Source
     | INC Param
     | INCW WordRegister
-    | DEC Param
+    | DEC ParamData
     | DECW WordRegister
     | RLCA
-    | ADD ByteRegister Param
-    | ADC ByteRegister Param
+    | ADD ByteRegister ParamData
+    | ADC ByteRegister ParamData
     | ADDW WordRegister WordRegister
     | ADDSP
     | RRCA
@@ -84,12 +84,12 @@ type Op
     | SCF
     | CCF
     | HALT
-    | SUB Param
-    | SBC Param
-    | AND Param
-    | XOR Param
-    | OR Param
-    | CP Param
+    | SUB ParamData
+    | SBC ParamData
+    | AND ParamData
+    | XOR ParamData
+    | OR ParamData
+    | CP ParamData
     | RET FlagCondition
     | POP WordRegister
     | JP FlagCondition JumpTarget
@@ -100,14 +100,14 @@ type Op
     | RETI
     | DI
     | EI
-    | RLC CBParam
-    | RRC CBParam
-    | RL CBParam
-    | RR CBParam
-    | SLA CBParam
-    | SRA CBParam
-    | SWAP CBParam
-    | SRL CBParam
-    | BIT Int CBParam
-    | RES Int CBParam
-    | SET Int CBParam
+    | RLC Param
+    | RRC Param
+    | RL Param
+    | RR Param
+    | SLA Param
+    | SRA Param
+    | SWAP Param
+    | SRL Param
+    | BIT Int Param
+    | RES Int Param
+    | SET Int Param

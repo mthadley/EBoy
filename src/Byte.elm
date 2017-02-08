@@ -1,15 +1,24 @@
 module Byte
     exposing
         ( Byte
+        , Result
         , add
-        , and
         , addc
+        , and
+        , dec
         , fromInt
         , getBit
+        , hasCarry
+        , hasHalfCarry
+        , inc
+        , incc
+        , isZero
         , lsbSet
         , msbSet
         , or
         , reset
+        , resultToByte
+        , resultToInt
         , rotateLeft
         , rotateLeftBy
         , rotateRight
@@ -24,18 +33,61 @@ module Byte
         , sub
         , subc
         , toInt
-        , inc
-        , incc
-        , dec
         )
 
 import Bitwise
 
 
-{-| Opaque type representing ab 8-bit byte.
+{-| Opaque type representing an 8-bit number.
 -}
 type Byte
     = Byte Int
+
+
+{-| Opaque type representing the result of an arithmetic operation.
+-}
+type Result
+    = Result
+        { byte : Byte
+        , carry : Bool
+        , halfCarry : Bool
+        }
+
+
+{-| Converts a `Result` to a `Byte`.
+-}
+resultToByte : Result -> Byte
+resultToByte (Result r) =
+    r.byte
+
+
+{-| Converts a `Result` to an `Int`.
+-}
+resultToInt : Result -> Int
+resultToInt (Result r) =
+    toInt r.byte
+
+
+{-| Returns `True` if there was a carry from the resulting operation.
+-}
+hasCarry : Result -> Bool
+hasCarry (Result r) =
+    r.carry
+
+
+{-| Returns `True` if there was a half carry from the resulting
+operation.
+-}
+hasHalfCarry : Result -> Bool
+hasHalfCarry (Result r) =
+    r.halfCarry
+
+
+{-| Returns `True` if the `Byte` is zero.
+-}
+isZero : Byte -> Bool
+isZero =
+    (==) 0 << toInt
 
 
 {-| Converts an `Int` to a `Byte`.
@@ -62,11 +114,7 @@ toInt (Byte b) =
 -}
 add : Byte -> Byte -> Byte
 add a b =
-    let
-        ( _, _, sum ) =
-            addc a b
-    in
-        sum
+    resultToByte <| addc a b
 
 
 {-| Bitwise and two `Byte`s.
@@ -86,16 +134,17 @@ or (Byte a) (Byte b) =
 {-| Adds two `Byte`s, returning a tuple of the sum and two `Bool`s indicating
 if there was carry and half carry, respectively.
 -}
-addc : Byte -> Byte -> ( Bool, Bool, Byte )
+addc : Byte -> Byte -> Result
 addc (Byte x) (Byte y) =
     let
         sum =
             x + y
     in
-        ( sum > 255
-        , Bitwise.and ((maskLower x) + (maskLower y)) 0x10 > 0
-        , fromInt sum
-        )
+        Result
+            { byte = fromInt sum
+            , carry = sum > 255
+            , halfCarry = (Bitwise.and ((maskLower x) + (maskLower y)) 0x10 > 0)
+            }
 
 
 {-| Subtracts the second `Byte` from the first.
@@ -132,13 +181,9 @@ inc byte =
 
 {-| Increment a Byte, also returning a `Bool` indicating if there was a half-carry.
 -}
-incc : Byte -> ( Bool, Byte )
+incc : Byte -> Result
 incc byte =
-    let
-        ( _, halfCarry, result ) =
-            addc byte <| fromInt 1
-    in
-        ( halfCarry, result )
+    addc byte <| fromInt 1
 
 
 {-| Decrement a Byte.
@@ -246,10 +291,10 @@ shiftRight =
 {-| Shifts Byte right n times, preserving sign.
 -}
 shiftRightBy : Int -> Byte -> Byte
-shiftRightBy n (Byte b) =
+shiftRightBy n ((Byte b) as byte) =
     let
         sign =
-            if Bitwise.and 0x80 b > 0 then
+            if msbSet byte then
                 Bitwise.complement 0
                     |> Bitwise.shiftLeftBy (8 - n)
                     |> mask

@@ -1,5 +1,6 @@
 module Z80 exposing (..)
 
+import Basics.Extra exposing (..)
 import Byte exposing (Byte)
 import Memory exposing (Memory)
 import Word exposing (Word)
@@ -87,8 +88,43 @@ executeOp op state =
                 |> writeLWTarget target
                 |> incPC
 
+        INC param ->
+            let
+                ( result, newState ) =
+                    applyParamWith Byte.incc param state
+            in
+                newState
+                    |> setFlagsWith
+                        [ Flag.Carry => False
+                        , Flag.HalfCarry => Byte.hasHalfCarry result
+                        , Flag.Zero => (Byte.isZero <| Byte.resultToByte <| result)
+                        ]
+                    |> incPC
+
         _ ->
             state
+
+
+applyParamWith : (Byte -> Byte.Result) -> Param -> State -> ( Byte.Result, State )
+applyParamWith f param state =
+    case param of
+        OnRegister register ->
+            let
+                result =
+                    f <| readByteRegister register state
+            in
+                ( result
+                , writeByteRegister register state <| Byte.resultToByte result
+                )
+
+        OnMemHL ->
+            let
+                result =
+                    f <| readMemRegister HL state
+            in
+                ( result
+                , writeMemRegister HL state <| Byte.resultToByte result
+                )
 
 
 
@@ -109,15 +145,15 @@ readLWSource source state =
                 ( byte, newState ) =
                     readDataByte state
 
-                ( carry, halfCarry, result ) =
+                result =
                     Word.addc
                         (readWordRegister SP state)
                         (Word.fromByte byte)
             in
-                ( result
+                ( Word.resultToWord result
                 , setFlagsWith
-                    [ ( Flag.Carry, carry )
-                    , ( Flag.HalfCarry, halfCarry )
+                    [ Flag.Carry => Word.hasCarry result
+                    , Flag.HalfCarry => Word.hasHalfCarry result
                     ]
                     state
                 )
@@ -158,14 +194,14 @@ writeLOTarget : LO.Target -> ( Byte, State ) -> State
 writeLOTarget target ( byte, state ) =
     case target of
         LO.IntoRegisterA ->
-            writeByteRegister byte A state
+            writeByteRegister A state byte
 
         LO.IntoMemDataOffset ->
             let
-                ( byte, newState ) =
-                    readDataByte state
+                ( word, newState ) =
+                    Tuple.mapFirst wordOffset <| readDataByte state
             in
-                writeMemByte (wordOffset byte) byte newState
+                writeMemByte word byte newState
 
         LO.IntoMemCOffset ->
             let
@@ -196,10 +232,10 @@ writeLBTarget : LB.Target -> ( Byte, State ) -> State
 writeLBTarget target ( byte, state ) =
     case target of
         LB.IntoRegister register ->
-            writeByteRegister byte register state
+            writeByteRegister register state byte
 
         LB.IntoMem register ->
-            writeMemRegister byte register state
+            writeMemRegister register state byte
 
         LB.IntoMemData ->
             let
@@ -223,8 +259,8 @@ writeMemWord addr word state =
     { state | memory = Memory.writeWord addr word state.memory }
 
 
-writeMemRegister : Byte -> WordRegister -> State -> State
-writeMemRegister byte wordRegister state =
+writeMemRegister : WordRegister -> State -> Byte -> State
+writeMemRegister wordRegister state byte =
     let
         addr =
             readWordRegister wordRegister state
@@ -232,8 +268,8 @@ writeMemRegister byte wordRegister state =
         writeMemByte addr byte state
 
 
-writeByteRegister : Byte -> ByteRegister -> State -> State
-writeByteRegister byte register state =
+writeByteRegister : ByteRegister -> State -> Byte -> State
+writeByteRegister register state byte =
     case register of
         A ->
             { state | a = byte }

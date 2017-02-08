@@ -25,7 +25,7 @@ decode b =
             INCW BC @ 8
 
         0x04 ->
-            INC (WithRegister B) @ 4
+            INC (OnRegister B) @ 4
 
         0x05 ->
             DEC (WithRegister B) @ 4
@@ -49,7 +49,7 @@ decode b =
             DECW BC @ 8
 
         0x0C ->
-            INC (WithRegister C) @ 4
+            INC (OnRegister C) @ 4
 
         0x0D ->
             DEC (WithRegister C) @ 4
@@ -73,7 +73,7 @@ decode b =
             INCW DE @ 8
 
         0x14 ->
-            INC (WithRegister D) @ 4
+            INC (OnRegister D) @ 4
 
         0x15 ->
             DEC (WithRegister D) @ 4
@@ -97,7 +97,7 @@ decode b =
             DECW DE @ 8
 
         0x1C ->
-            INC (WithRegister E) @ 4
+            INC (OnRegister E) @ 4
 
         0x1D ->
             DEC (WithRegister E) @ 4
@@ -121,7 +121,7 @@ decode b =
             INCW HL @ 8
 
         0x24 ->
-            INC (WithRegister H) @ 4
+            INC (OnRegister H) @ 4
 
         0x25 ->
             DEC (WithRegister H) @ 4
@@ -145,7 +145,7 @@ decode b =
             DECW HL @ 8
 
         0x2C ->
-            INC (WithRegister L) @ 4
+            INC (OnRegister L) @ 4
 
         0x2D ->
             DEC (WithRegister L) @ 4
@@ -169,7 +169,7 @@ decode b =
             INCW SP @ 8
 
         0x34 ->
-            INC WithMemHL @ 12
+            INC OnMemHL @ 12
 
         0x35 ->
             DEC WithMemHL @ 12
@@ -193,7 +193,7 @@ decode b =
             DECW SP @ 8
 
         0x3C ->
-            INC (WithRegister A) @ 4
+            INC (OnRegister A) @ 4
 
         0x3D ->
             DEC (WithRegister A) @ 4
@@ -798,7 +798,7 @@ decodeCB byte =
         decodeCBWith (decodeCBOp b) b
 
 
-decodeCBOp : Int -> (CBParam -> Op)
+decodeCBOp : Int -> (Param -> Op)
 decodeCBOp code =
     case code // 8 of
         0 ->
@@ -901,7 +901,7 @@ decodeCBOp code =
             always <| INVALID b
 
 
-decodeCBWith : (CBParam -> Op) -> Int -> ( Op, Cycles )
+decodeCBWith : (Param -> Op) -> Int -> ( Op, Cycles )
 decodeCBWith op code =
     let
         ( param, cycles ) =
