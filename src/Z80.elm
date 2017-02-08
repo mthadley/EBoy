@@ -95,8 +95,8 @@ executeOp op state =
             in
                 newState
                     |> setFlagsWith
-                        [ Flag.Carry => False
-                        , Flag.HalfCarry => Byte.hasHalfCarry result
+                        [ Flag.HalfCarry => Byte.hasHalfCarry result
+                        , Flag.Subtract => False
                         , Flag.Zero => (Byte.isZero <| Byte.resultToByte <| result)
                         ]
                     |> incPC
