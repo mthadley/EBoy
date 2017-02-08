@@ -1,46 +1,7 @@
-module Z80.State exposing (..)
+module Z80.Update exposing (..)
 
-import Byte exposing (Byte)
-import Memory exposing (Memory)
-import Word exposing (Word)
 import Z80.Flag as Flag exposing (Flag)
-import Z80.Cycles exposing (Cycles(..))
-import Z80.Registers exposing (..)
-
-
-{-| An emulation of a Z80 CPU core
--}
-type alias State =
-    { clock : Int
-    , memory : Memory
-    , a : Byte
-    , b : Byte
-    , c : Byte
-    , d : Byte
-    , e : Byte
-    , h : Byte
-    , l : Byte
-    , f : Byte
-    , pc : Word {- 16-bit registers -}
-    , sp : Word
-    }
-
-
-init : State
-init =
-    { clock = 0
-    , memory = Memory.init
-    , a = Byte.fromInt 0
-    , b = Byte.fromInt 0
-    , c = Byte.fromInt 0
-    , d = Byte.fromInt 0
-    , e = Byte.fromInt 0
-    , h = Byte.fromInt 0
-    , l = Byte.fromInt 0
-    , f = Byte.fromInt 0
-    , pc = Word.fromInt 0
-    , sp = Word.fromInt 0
-    }
+import Z80.Decode exposing (Cycles(..))
 
 
 writeMemByte : Word -> Byte -> State -> State

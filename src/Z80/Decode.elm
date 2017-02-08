@@ -1,4 +1,4 @@
-module Z80.Decode exposing (Cycles(..), decode, decodeCB, isCB)
+module Z80.Decode exposing (decode, decodeCB, isCB)
 
 import Bitwise
 import Byte exposing (Byte)
@@ -7,6 +7,7 @@ import Z80.LO as LO
 import Z80.LW as LW
 import Z80.Op exposing (..)
 import Z80.Registers exposing (..)
+import Z80.Cycles exposing (Cycles(..))
 
 
 {-| Decodes an instruction, returning a tuple of the `Op` and
@@ -951,14 +952,6 @@ isCB op =
 none : ( Op, Cycles )
 none =
     NONE @ 0
-
-
-{-| Represents how many cycles an intruction will take. Some
-have two values since they are branching (`JR`, `JRNZ`, etc.).
--}
-type Cycles
-    = Always Int
-    | Branching Int Int
 
 
 {-| Returns a tuple containing the operation and number of

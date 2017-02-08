@@ -1,6 +1,10 @@
 module Z80.LW exposing (..)
 
-import Z80.Registers exposing (WordRegister, ByteRegister)
+import Basics.Extra exposing ((=>))
+import Word exposing (Word)
+import Z80.Flag as Flag
+import Z80.Registers exposing (..)
+import Z80.State exposing (..)
 
 
 {-| Targets for 16-bit `LD` instructions.
@@ -16,3 +20,45 @@ type Source
     = FromRegister WordRegister
     | FromData
     | FromSPByteData
+
+
+readSource : Source -> State -> ( Word, State )
+readSource source state =
+    case source of
+        FromRegister register ->
+            ( readWordRegister register state, state )
+
+        FromData ->
+            readDataWord state
+
+        FromSPByteData ->
+            let
+                ( byte, newState ) =
+                    readDataByte state
+
+                result =
+                    Word.addc
+                        (readWordRegister SP state)
+                        (Word.fromByte byte)
+            in
+                ( Word.resultToWord result
+                , setFlagsWith
+                    [ Flag.Carry => Word.hasCarry result
+                    , Flag.HalfCarry => Word.hasHalfCarry result
+                    ]
+                    state
+                )
+
+
+writeTarget : Target -> ( Word, State ) -> State
+writeTarget target ( word, state ) =
+    case target of
+        IntoRegister register ->
+            writeWordRegister word register state
+
+        IntoMemData ->
+            let
+                ( addr, newState ) =
+                    readDataWord state
+            in
+                writeMemWord addr word newState
