@@ -50,9 +50,8 @@ fromByte =
     Word << Byte.toInt
 
 
-{-| Converts two `Byte`s to a `Word`. The first `Byte`
-represents the higher 8 bits, and the second the lower
-8 bits.
+{-| Converts two `Byte`s to a `Word`. The first `Byte` represents the higher 8
+bits, and the second the lower 8 bits.
 -}
 fromBytes : Byte -> Byte -> Word
 fromBytes high low =
@@ -61,9 +60,8 @@ fromBytes high low =
         |> Word
 
 
-{-| Converts a `Word` to a tuple of `Byte`s. The first
-`Byte` represents the 8 high bits, and the second represents
-the lower 8 bits.
+{-| Converts a `Word` to a tuple of `Byte`s. The first `Byte` represents the 8
+high bits, and the second represents the lower 8 bits.
 -}
 toBytes : Word -> ( Byte, Byte )
 toBytes (Word w) =
@@ -79,7 +77,7 @@ add a b =
     Carry.value <| addc a b
 
 
-{-| Adds two `Word`s, and returns a `Result`.
+{-| Adds two `Word`s, and returns a `Carry`.
 -}
 addc : Word -> Word -> Carry Word
 addc (Word a) (Word b) =

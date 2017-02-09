@@ -61,7 +61,7 @@ fromInt =
 
     (fromInt 3 |> toInt) == 3
 
-Guaranteed to be in the range: 0 <= n < 2^8
+Guaranteed to be in the range: `10 <= n < 2^8`
 -}
 toInt : Byte -> Int
 toInt (Byte b) =
@@ -75,22 +75,21 @@ add a b =
     Carry.value <| addc a b
 
 
-{-| Bitwise and two `Byte`s.
+{-| Bitwise and (&) two `Byte`s.
 -}
 and : Byte -> Byte -> Byte
 and (Byte a) (Byte b) =
     Byte <| Bitwise.and a b
 
 
-{-| Bitwise or two `Byte`s.
+{-| Bitwise or (|) two `Byte`s.
 -}
 or : Byte -> Byte -> Byte
 or (Byte a) (Byte b) =
     Byte <| Bitwise.or a b
 
 
-{-| Adds two `Byte`s, returning a tuple of the sum and two `Bool`s indicating
-if there was carry and half carry, respectively.
+{-| Adds two `Byte`s, returning a `Carry`.
 -}
 addc : Byte -> Byte -> Carry Byte
 addc (Byte x) (Byte y) =
