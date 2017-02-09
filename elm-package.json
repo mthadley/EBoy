@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "A Z80 emulator written in Elm",
-    "repository": "https://github.com/mthadley/EBoy.git",
+    "repository": "https://github.com/mthadley/eboy.git",
     "license": "GPL-3.0+",
     "source-directories": [
         ".",
