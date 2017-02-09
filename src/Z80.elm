@@ -1,7 +1,6 @@
 module Z80 exposing (..)
 
 import Carry exposing (Carry)
-import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Memory exposing (Memory)
 import Word exposing (Word)
@@ -96,11 +95,24 @@ executeOp op state =
                     applyParamWith Byte.incc param state
             in
                 newState
-                    |> setFlagsWith
-                        [ Flag.HalfCarry => Carry.checkHalf result
-                        , Flag.Subtract => False
-                        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
-                        ]
+                    |> setCarryFlags result
+                    |> resetFlag Flag.Subtract
+                    |> incPC
+
+        INCW register ->
+            readWordRegister register state
+                |> Word.inc
+                |> writeWordRegister register state
+                |> incPC
+
+        DEC param ->
+            let
+                ( result, newState ) =
+                    applyParamWith Byte.decc param state
+            in
+                newState
+                    |> setCarryFlags result
+                    |> setFlag Flag.Subtract
                     |> incPC
 
         _ ->

@@ -5,6 +5,7 @@ module Byte
         , addc
         , and
         , dec
+        , decc
         , fromInt
         , getBit
         , inc
@@ -107,25 +108,18 @@ addc (Byte x) (Byte y) =
 -}
 sub : Byte -> Byte -> Byte
 sub a b =
-    Tuple.second <| subc a b
+    Carry.value <| subc a b
 
 
-{-| Subtracts the second `Byte` from the first, returning a
-tuple of the difference and a `Bool` indicating if there was
-underflow.
+{-| Subtracts the second `Byte` from the first, returning a carry.
 
-    subc (fromInt 5) (fromInt 3) == ( False, fromInt 2 )
-    subc (fromInt 2) (fromInt 3) == ( True, fromInt 255 )
 -}
-subc : Byte -> Byte -> ( Bool, Byte )
+subc : Byte -> Byte -> Carry Byte
 subc (Byte x) (Byte y) =
-    let
-        diff =
-            x - y
-    in
-        ( diff < 0
-        , fromInt <| diff + 256
-        )
+    Carry.create
+        (fromInt <| x - y)
+        (x < y)
+        (maskLower x < maskLower y)
 
 
 {-| Increment a Byte.
@@ -135,18 +129,25 @@ inc byte =
     add byte <| fromInt 1
 
 
-{-| Increment a Byte, also returning a `Bool` indicating if there was a half-carry.
+{-| Increment a `Byte`, returning a `Carry`.
 -}
 incc : Byte -> Carry Byte
 incc byte =
     addc byte <| fromInt 1
 
 
-{-| Decrement a Byte.
+{-| Decrement a `Byte`, returning a `Carry`.
+-}
+decc : Byte -> Carry Byte
+decc byte =
+    subc byte <| fromInt 1
+
+
+{-| Decrement a `Byte`.
 -}
 dec : Byte -> Byte
-dec byte =
-    add byte <| fromInt -1
+dec =
+    Carry.value << decc
 
 
 {-| Returns a `Bool` indicating whether or not the most significant

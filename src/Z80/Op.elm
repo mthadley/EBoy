@@ -65,7 +65,7 @@ type Op
     | LDW LW.Target LW.Source
     | INC Param
     | INCW WordRegister
-    | DEC ParamData
+    | DEC Param
     | DECW WordRegister
     | RLCA
     | ADD ByteRegister ParamData

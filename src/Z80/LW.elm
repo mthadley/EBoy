@@ -55,7 +55,7 @@ writeTarget : Target -> ( Word, State ) -> State
 writeTarget target ( word, state ) =
     case target of
         IntoRegister register ->
-            writeWordRegister word register state
+            writeWordRegister register state word
 
         IntoMemData ->
             let

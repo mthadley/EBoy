@@ -32,7 +32,7 @@ decode b =
             INC (OnRegister B) @ 4
 
         0x05 ->
-            DEC (WithRegister B) @ 4
+            DEC (OnRegister B) @ 4
 
         0x06 ->
             LD (LB.IntoRegister B) LB.FromData @ 8
@@ -56,7 +56,7 @@ decode b =
             INC (OnRegister C) @ 4
 
         0x0D ->
-            DEC (WithRegister C) @ 4
+            DEC (OnRegister C) @ 4
 
         0x0E ->
             LD (LB.IntoRegister C) LB.FromData @ 8
@@ -80,7 +80,7 @@ decode b =
             INC (OnRegister D) @ 4
 
         0x15 ->
-            DEC (WithRegister D) @ 4
+            DEC (OnRegister D) @ 4
 
         0x16 ->
             LD (LB.IntoRegister D) LB.FromData @ 8
@@ -104,7 +104,7 @@ decode b =
             INC (OnRegister E) @ 4
 
         0x1D ->
-            DEC (WithRegister E) @ 4
+            DEC (OnRegister E) @ 4
 
         0x1E ->
             LD (LB.IntoRegister E) LB.FromData @ 8
@@ -128,7 +128,7 @@ decode b =
             INC (OnRegister H) @ 4
 
         0x25 ->
-            DEC (WithRegister H) @ 4
+            DEC (OnRegister H) @ 4
 
         0x26 ->
             LD (LB.IntoRegister H) LB.FromData @ 8
@@ -152,7 +152,7 @@ decode b =
             INC (OnRegister L) @ 4
 
         0x2D ->
-            DEC (WithRegister L) @ 4
+            DEC (OnRegister L) @ 4
 
         0x2E ->
             LD (LB.IntoRegister L) LB.FromData @ 8
@@ -176,7 +176,7 @@ decode b =
             INC OnMemHL @ 12
 
         0x35 ->
-            DEC WithMemHL @ 12
+            DEC OnMemHL @ 12
 
         0x36 ->
             LD (LB.IntoMem HL) LB.FromData @ 12
@@ -200,7 +200,7 @@ decode b =
             INC (OnRegister A) @ 4
 
         0x3D ->
-            DEC (WithRegister A) @ 4
+            DEC (OnRegister A) @ 4
 
         0x3E ->
             LD (LB.IntoRegister A) LB.FromData @ 8

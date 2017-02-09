@@ -4,12 +4,14 @@ module Word
         , add
         , addc
         , dec
+        , decc
         , fromByte
         , fromBytes
         , fromInt
         , inc
+        , incc
         , isZero
-        , sub
+        , subc
         , toBytes
         , toInt
         )
@@ -96,23 +98,40 @@ addc (Word a) (Word b) =
 
 {-| Subtracts the second `Word` from the first.
 -}
-sub : Word -> Word -> Word
-sub (Word w) (Word x) =
-    fromInt <| w - x
+subc : Word -> Word -> Carry Word
+subc (Word w) (Word x) =
+    Carry.create
+        (fromInt <| w - x)
+        (w < x)
+        (maskLower w < maskLower x)
+
+
+{-| Increments a `Word`, returning a `Carry`.
+-}
+incc : Word -> Carry Word
+incc w =
+    addc w <| fromInt 1
 
 
 {-| Increments a `Word`.
 -}
 inc : Word -> Word
-inc (Word w) =
-    fromInt <| w + 1
+inc =
+    Carry.value << incc
+
+
+{-| Decrements a `Word`, returning a `Carry`.
+-}
+decc : Word -> Carry Word
+decc w =
+    subc w <| fromInt 1
 
 
 {-| Decrements a `Word`.
 -}
 dec : Word -> Word
-dec (Word w) =
-    fromInt <| w - 1
+dec =
+    Carry.value << decc
 
 
 {-| Converts a `Word` back to an `Int`.

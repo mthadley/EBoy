@@ -1,6 +1,8 @@
 module Z80.State exposing (..)
 
+import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
+import Carry exposing (Carry)
 import Memory exposing (Memory)
 import Word exposing (Word)
 import Z80.Flag as Flag exposing (Flag)
@@ -90,8 +92,8 @@ writeByteRegister register state byte =
             { state | f = byte }
 
 
-writeWordRegister : Word -> WordRegister -> State -> State
-writeWordRegister word register state =
+writeWordRegister : WordRegister -> State -> Word -> State
+writeWordRegister register state word =
     case register of
         PC ->
             { state | pc = word }
@@ -235,6 +237,10 @@ updateClock cycles state =
         { state | clock = state.clock + count }
 
 
+
+-- PC
+
+
 addPC : Int -> State -> State
 addPC n state =
     { state | pc = Word.add state.pc <| Word.fromInt n }
@@ -250,14 +256,41 @@ wordOffset =
     Word.add (Word.fromInt 0xFF00) << Word.fromByte
 
 
+
+-- Flags
+
+
+setFlag : Flag -> State -> State
+setFlag flags =
+    updateFlags <| Flag.set flags
+
+
+resetFlag : Flag -> State -> State
+resetFlag flags =
+    updateFlags <| Flag.reset flags
+
+
+setFlags : List Flag -> State -> State
+setFlags flags =
+    updateFlags <| Flag.setEach flags
+
+
 resetFlags : List Flag -> State -> State
 resetFlags flags =
-    updateFlags <| Flag.reset flags
+    updateFlags <| Flag.resetEach flags
 
 
 setFlagsWith : List ( Flag, Bool ) -> State -> State
 setFlagsWith flags =
     updateFlags <| Flag.setWith flags
+
+
+setCarryFlags : Carry Byte -> State -> State
+setCarryFlags result =
+    setFlagsWith
+        [ Flag.HalfCarry => Carry.checkHalf result
+        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
+        ]
 
 
 updateFlags : (Byte -> Byte) -> State -> State
