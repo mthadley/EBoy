@@ -1,5 +1,6 @@
 module Z80 exposing (..)
 
+import Carry exposing (Carry)
 import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Memory exposing (Memory)
@@ -96,9 +97,9 @@ executeOp op state =
             in
                 newState
                     |> setFlagsWith
-                        [ Flag.HalfCarry => Byte.hasHalfCarry result
+                        [ Flag.HalfCarry => Carry.checkHalf result
                         , Flag.Subtract => False
-                        , Flag.Zero => (Byte.isZero <| Byte.resultToByte <| result)
+                        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
                         ]
                     |> incPC
 
@@ -106,7 +107,7 @@ executeOp op state =
             state
 
 
-applyParamWith : (Byte -> Byte.Result) -> Param -> State -> ( Byte.Result, State )
+applyParamWith : (Byte -> Carry Byte) -> Param -> State -> ( Carry Byte, State )
 applyParamWith f param state =
     case param of
         OnRegister register ->
@@ -115,7 +116,7 @@ applyParamWith f param state =
                     f <| readByteRegister register state
             in
                 ( result
-                , writeByteRegister register state <| Byte.resultToByte result
+                , writeByteRegister register state <| Carry.value result
                 )
 
         OnMemHL ->
@@ -124,5 +125,5 @@ applyParamWith f param state =
                     f <| readMemRegister HL state
             in
                 ( result
-                , writeMemRegister HL state <| Byte.resultToByte result
+                , writeMemRegister HL state <| Carry.value result
                 )

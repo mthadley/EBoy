@@ -1,6 +1,7 @@
 module Z80.LW exposing (..)
 
 import Basics.Extra exposing ((=>))
+import Carry
 import Word exposing (Word)
 import Z80.Flag as Flag
 import Z80.Registers exposing (..)
@@ -41,10 +42,10 @@ readSource source state =
                         (readWordRegister SP state)
                         (Word.fromByte byte)
             in
-                ( Word.resultToWord result
+                ( Carry.value result
                 , setFlagsWith
-                    [ Flag.Carry => Word.hasCarry result
-                    , Flag.HalfCarry => Word.hasHalfCarry result
+                    [ Flag.Carry => Carry.check result
+                    , Flag.HalfCarry => Carry.checkHalf result
                     ]
                     state
                 )
