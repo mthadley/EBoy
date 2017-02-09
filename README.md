@@ -1,3 +1,1 @@
-# EBoy
-
-An original gameboy emulator written in Elm.
+🚧 Work in Progress 🚧
