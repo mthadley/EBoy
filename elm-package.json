@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "A GameBoy emulator written in Elm",
-    "repository": "https://github.com/mthadley/elm-boy.git",
+    "summary": "A Z80 emulator written in Elm",
+    "repository": "https://github.com/mthadley/EBoy.git",
     "license": "BSD3",
     "source-directories": [
         ".",

@@ -10,7 +10,7 @@ import Z80.Cycles exposing (Cycles(..))
 import Z80.Registers exposing (..)
 
 
-{-| An emulation of a Z80 CPU core
+{-| An emulation of a Z80 CPU.
 -}
 type alias State =
     { clock : Int
