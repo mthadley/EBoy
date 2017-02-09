@@ -90,14 +90,10 @@ executeOp op state =
                 |> incPC
 
         INC param ->
-            let
-                ( result, newState ) =
-                    applyParamWith Byte.incc param state
-            in
-                newState
-                    |> setCarryFlags result
-                    |> resetFlag Flag.Subtract
-                    |> incPC
+            applyParamWith Byte.incc param state
+                |> uncurry setCarryFlags
+                |> resetFlag Flag.Subtract
+                |> incPC
 
         INCW register ->
             readWordRegister register state
@@ -106,14 +102,10 @@ executeOp op state =
                 |> incPC
 
         DEC param ->
-            let
-                ( result, newState ) =
-                    applyParamWith Byte.decc param state
-            in
-                newState
-                    |> setCarryFlags result
-                    |> setFlag Flag.Subtract
-                    |> incPC
+            applyParamWith Byte.decc param state
+                |> uncurry setCarryFlags
+                |> setFlag Flag.Subtract
+                |> incPC
 
         _ ->
             state
