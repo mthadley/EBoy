@@ -1,5 +1,8 @@
 module Z80.State exposing (..)
 
+{-| Machine State and various functions that can be used to modify it.
+-}
+
 import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
@@ -10,7 +13,7 @@ import Z80.Cycles exposing (Cycles(..))
 import Z80.Registers exposing (..)
 
 
-{-| An emulation of a Z80 CPU.
+{-| A record representing the current state of the CPU.
 -}
 type alias State =
     { clock : Int

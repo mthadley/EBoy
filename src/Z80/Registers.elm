@@ -1,6 +1,11 @@
 module Z80.Registers exposing (..)
 
+{-| The registers of the Z80.
+-}
 
+
+{-| A type respresenting the possible 8-bit registers.
+-}
 type ByteRegister
     = A
     | B
@@ -12,6 +17,10 @@ type ByteRegister
     | F
 
 
+{-| A type respresenting the possible 16-bit registers. Only `PC`
+and `SP` are *true* 16-bit registers, the rest are pairs of 8-bit
+registers.
+-}
 type WordRegister
     = PC
     | SP

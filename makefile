@@ -8,3 +8,6 @@ clean:
 
 elm:
 	elm-make src/Main.elm --output $(MAIN)
+
+test:
+	@elm-test

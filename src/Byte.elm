@@ -217,8 +217,7 @@ reset n (Byte b) =
     Bitwise.shiftLeftBy n 1
         |> Bitwise.complement
         |> Bitwise.and b
-        |> mask
-        |> Byte
+        |> fromInt
 
 
 {-| Shifts Byte left once.
@@ -232,9 +231,7 @@ shiftLeft =
 -}
 shiftLeftBy : Int -> Byte -> Byte
 shiftLeftBy n (Byte b) =
-    Bitwise.shiftLeftBy n b
-        |> mask
-        |> Byte
+    fromInt <| Bitwise.shiftLeftBy n b
 
 
 {-| Shifts Byte right once, preserving sign.
