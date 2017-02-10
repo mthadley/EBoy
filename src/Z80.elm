@@ -1,8 +1,9 @@
 module Z80 exposing (..)
 
-import Carry exposing (Carry)
 import Byte exposing (Byte)
+import Carry exposing (Carry)
 import Memory exposing (Memory)
+import Util
 import Word exposing (Word)
 import Z80.Cycles exposing (Cycles)
 import Z80.Decode as Decode
@@ -90,8 +91,8 @@ executeOp op state =
                 |> incPC
 
         INC param ->
-            applyParamWith Byte.incc param state
-                |> uncurry setCarryFlags
+            applyWith Byte.incc param state
+                |> uncurry setIncFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -102,32 +103,72 @@ executeOp op state =
                 |> incPC
 
         DEC param ->
-            applyParamWith Byte.decc param state
-                |> uncurry setCarryFlags
+            applyWith Byte.decc param state
+                |> uncurry setIncFlags
                 |> setFlag Flag.Subtract
+                |> incPC
+
+        DECW register ->
+            readWordRegister register state
+                |> Word.dec
+                |> writeWordRegister register state
+                |> incPC
+
+        ADD param ->
+            accumulateWith Byte.addc param state
+                |> uncurry setAccFlags
+                |> resetFlag Flag.Subtract
                 |> incPC
 
         _ ->
             state
 
 
-applyParamWith : (Byte -> Carry Byte) -> Param -> State -> ( Carry Byte, State )
-applyParamWith f param state =
+accumulateWith :
+    (Byte -> Byte -> Carry Byte)
+    -> ParamData
+    -> State
+    -> ( Carry Byte, State )
+accumulateWith f param state =
+    let
+        operation =
+            f <| readByteRegister A state
+    in
+        case param of
+            WithRegister register ->
+                readByteRegister register state
+                    |> Util.cloneWith operation
+                    |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
+
+            WithMemHL ->
+                readMemRegister HL state
+                    |> Util.cloneWith operation
+                    |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
+
+            WithData ->
+                readDataByte state
+                    |> Tuple.mapFirst operation
+                    |> uncurry
+                        (\result newState ->
+                            ( result
+                            , writeByteRegister A newState <| Carry.value result
+                            )
+                        )
+
+
+applyWith :
+    (Byte -> Carry Byte)
+    -> Param
+    -> State
+    -> ( Carry Byte, State )
+applyWith f param state =
     case param of
         OnRegister register ->
-            let
-                result =
-                    f <| readByteRegister register state
-            in
-                ( result
-                , writeByteRegister register state <| Carry.value result
-                )
+            readByteRegister register state
+                |> Util.cloneWith f
+                |> Tuple.mapSecond (writeByteRegister register state << Carry.value)
 
         OnMemHL ->
-            let
-                result =
-                    f <| readMemRegister HL state
-            in
-                ( result
-                , writeMemRegister HL state <| Carry.value result
-                )
+            readMemRegister HL state
+                |> Util.cloneWith f
+                |> Tuple.mapSecond (writeMemRegister HL state << Carry.value)

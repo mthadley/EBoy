@@ -288,8 +288,17 @@ setFlagsWith flags =
     updateFlags <| Flag.setWith flags
 
 
-setCarryFlags : Carry Byte -> State -> State
-setCarryFlags result =
+setAccFlags : Carry Byte -> State -> State
+setAccFlags result =
+    setFlagsWith
+        [ Flag.Carry => Carry.check result
+        , Flag.HalfCarry => Carry.checkHalf result
+        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
+        ]
+
+
+setIncFlags : Carry Byte -> State -> State
+setIncFlags result =
     setFlagsWith
         [ Flag.HalfCarry => Carry.checkHalf result
         , Flag.Zero => (Byte.isZero <| Carry.value <| result)

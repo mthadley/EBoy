@@ -38,7 +38,7 @@ decode b =
             LD (LB.IntoRegister B) LB.FromData @ 8
 
         0x07 ->
-            RLCA @ 4
+            RLC (OnRegister A) @ 4
 
         0x08 ->
             LDW LW.IntoMemData (LW.FromRegister SP) @ 20
@@ -401,28 +401,28 @@ decode b =
             LD (LB.IntoRegister A) (LB.FromRegister A) @ 8
 
         0x80 ->
-            ADD A (WithRegister B) @ 4
+            ADD (WithRegister B) @ 4
 
         0x81 ->
-            ADD A (WithRegister C) @ 4
+            ADD (WithRegister C) @ 4
 
         0x82 ->
-            ADD A (WithRegister D) @ 4
+            ADD (WithRegister D) @ 4
 
         0x83 ->
-            ADD A (WithRegister E) @ 4
+            ADD (WithRegister E) @ 4
 
         0x84 ->
-            ADD A (WithRegister H) @ 4
+            ADD (WithRegister H) @ 4
 
         0x85 ->
-            ADD A (WithRegister L) @ 4
+            ADD (WithRegister L) @ 4
 
         0x86 ->
-            ADD A WithMemHL @ 8
+            ADD WithMemHL @ 8
 
         0x87 ->
-            ADD A (WithRegister A) @ 4
+            ADD (WithRegister A) @ 4
 
         0x88 ->
             ADC A (WithRegister B) @ 4
@@ -611,7 +611,7 @@ decode b =
             PUSH BC @ 16
 
         0xC6 ->
-            ADD A WithData @ 8
+            ADD WithData @ 8
 
         0xC7 ->
             RST 0x00 @ 16
