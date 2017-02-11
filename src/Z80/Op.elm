@@ -69,7 +69,7 @@ type Op
     | DECW WordRegister
     | ADD ParamData
     | ADC ParamData
-    | ADDW WordRegister WordRegister
+    | ADDW WordRegister
     | ADDSP
     | RRCA
     | STOP

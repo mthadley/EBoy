@@ -44,7 +44,7 @@ decode b =
             LDW LW.IntoMemData (LW.FromRegister SP) @ 20
 
         0x09 ->
-            ADDW HL BC @ 8
+            ADDW BC @ 8
 
         0x0A ->
             LD (LB.IntoRegister A) (LB.FromMem BC) @ 8
@@ -92,7 +92,7 @@ decode b =
             JR NoCondition @ 12
 
         0x19 ->
-            ADDW HL DE @ 8
+            ADDW DE @ 8
 
         0x1A ->
             LD (LB.IntoRegister A) (LB.FromMem DE) @ 8
@@ -140,7 +140,7 @@ decode b =
             JR (Set Zero) / ( 12, 8 )
 
         0x29 ->
-            ADDW HL HL @ 8
+            ADDW HL @ 8
 
         0x2A ->
             LDI (LB.IntoRegister A) (LB.FromMem HL) @ 8
@@ -188,7 +188,7 @@ decode b =
             JR (Set Carry) / ( 12, 8 )
 
         0x39 ->
-            ADDW HL SP @ 8
+            ADDW SP @ 8
 
         0x3A ->
             LDD (LB.IntoRegister A) (LB.FromMem HL) @ 8

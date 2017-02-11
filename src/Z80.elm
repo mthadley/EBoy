@@ -1,5 +1,6 @@
 module Z80 exposing (..)
 
+import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
 import Memory exposing (Memory)
@@ -125,6 +126,19 @@ executeOp op state =
                 |> uncurry setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
+
+        ADDW register ->
+            readWordRegister register state
+                |> Word.addc (readWordRegister HL state)
+                |> (\result ->
+                        writeWordRegister register state (Carry.value result)
+                            |> setFlagsWith
+                                [ Flag.Carry => Carry.check result
+                                , Flag.HalfCarry => Carry.checkHalf result
+                                , Flag.Subtract => False
+                                ]
+                            |> incPC
+                   )
 
         _ ->
             state
