@@ -425,28 +425,28 @@ decode b =
             ADD (WithRegister A) @ 4
 
         0x88 ->
-            ADC A (WithRegister B) @ 4
+            ADC (WithRegister B) @ 4
 
         0x89 ->
-            ADC A (WithRegister C) @ 4
+            ADC (WithRegister C) @ 4
 
         0x8A ->
-            ADC A (WithRegister D) @ 4
+            ADC (WithRegister D) @ 4
 
         0x8B ->
-            ADC A (WithRegister E) @ 4
+            ADC (WithRegister E) @ 4
 
         0x8C ->
-            ADC A (WithRegister H) @ 4
+            ADC (WithRegister H) @ 4
 
         0x8D ->
-            ADC A (WithRegister L) @ 4
+            ADC (WithRegister L) @ 4
 
         0x8E ->
-            ADC A WithMemHL @ 8
+            ADC WithMemHL @ 8
 
         0x8F ->
-            ADC A (WithRegister A) @ 4
+            ADC (WithRegister A) @ 4
 
         0x90 ->
             SUB (WithRegister B) @ 4
@@ -635,7 +635,7 @@ decode b =
             CALL NoCondition @ 24
 
         0xCE ->
-            ADC A WithData @ 8
+            ADC WithData @ 8
 
         0xCF ->
             RST 0x08 @ 16

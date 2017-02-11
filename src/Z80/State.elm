@@ -11,6 +11,7 @@ import Word exposing (Word)
 import Z80.Flag as Flag exposing (Flag)
 import Z80.Cycles exposing (Cycles(..))
 import Z80.Registers exposing (..)
+import Util
 
 
 {-| A record representing the current state of the CPU.
@@ -303,6 +304,13 @@ setIncFlags result =
         [ Flag.HalfCarry => Carry.checkHalf result
         , Flag.Zero => (Byte.isZero <| Carry.value <| result)
         ]
+
+
+getFlagByte : Flag -> State -> Byte
+getFlagByte flag state =
+    Flag.isSet flag state.f
+        |> Util.toInt
+        |> Byte.fromInt
 
 
 updateFlags : (Byte -> Byte) -> State -> State

@@ -68,7 +68,7 @@ type Op
     | DEC Param
     | DECW WordRegister
     | ADD ParamData
-    | ADC ByteRegister ParamData
+    | ADC ParamData
     | ADDW WordRegister WordRegister
     | ADDSP
     | RRCA

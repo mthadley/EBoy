@@ -4,6 +4,16 @@ module Util exposing (..)
 -}
 
 
+{-| Converts a `Bool` to an `Int`.
+-}
+toInt : Bool -> Int
+toInt bool =
+    if bool then
+        1
+    else
+        0
+
+
 {-| Returns a tuple of a value after passing it through a function.
 -}
 cloneWith : (a -> b) -> a -> ( b, b )

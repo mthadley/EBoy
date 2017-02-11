@@ -120,6 +120,12 @@ executeOp op state =
                 |> resetFlag Flag.Subtract
                 |> incPC
 
+        ADC param ->
+            accumulateCarryWith Byte.addc param state
+                |> uncurry setAccFlags
+                |> resetFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 
@@ -130,30 +136,46 @@ accumulateWith :
     -> State
     -> ( Carry Byte, State )
 accumulateWith f param state =
+    readParamData param state
+        |> Tuple.mapFirst (f <| readByteRegister A state)
+        |> writeAccumulator
+
+
+accumulateCarryWith :
+    (Byte -> Byte -> Carry Byte)
+    -> ParamData
+    -> State
+    -> ( Carry Byte, State )
+accumulateCarryWith f param state =
     let
-        operation =
-            f <| readByteRegister A state
+        operand =
+            Byte.add
+                (readByteRegister A state)
+                (getFlagByte Flag.Carry state)
     in
-        case param of
-            WithRegister register ->
-                readByteRegister register state
-                    |> Util.cloneWith operation
-                    |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
+        readParamData param state
+            |> Tuple.mapFirst (f operand)
+            |> writeAccumulator
 
-            WithMemHL ->
-                readMemRegister HL state
-                    |> Util.cloneWith operation
-                    |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
 
-            WithData ->
-                readDataByte state
-                    |> Tuple.mapFirst operation
-                    |> uncurry
-                        (\result newState ->
-                            ( result
-                            , writeByteRegister A newState <| Carry.value result
-                            )
-                        )
+readParamData : ParamData -> State -> ( Byte, State )
+readParamData param state =
+    case param of
+        WithRegister register ->
+            ( readByteRegister register state, state )
+
+        WithMemHL ->
+            ( readMemRegister HL state, state )
+
+        WithData ->
+            readDataByte state
+
+
+writeAccumulator : ( Carry Byte, State ) -> ( Carry Byte, State )
+writeAccumulator ( result, state ) =
+    ( result
+    , writeByteRegister A state <| Carry.value result
+    )
 
 
 applyWith :
