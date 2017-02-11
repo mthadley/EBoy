@@ -290,11 +290,19 @@ setFlagsWith flags =
 
 
 setAccFlags : Carry Byte -> State -> State
-setAccFlags result =
+setAccFlags result state =
+    setCarryFlags result <|
+        setFlagsWith
+            [ Flag.Zero => (Byte.isZero <| Carry.value <| result)
+            ]
+            state
+
+
+setCarryFlags : Carry a -> State -> State
+setCarryFlags result =
     setFlagsWith
         [ Flag.Carry => Carry.check result
         , Flag.HalfCarry => Carry.checkHalf result
-        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
         ]
 
 
