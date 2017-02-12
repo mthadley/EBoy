@@ -20,6 +20,7 @@ module Byte
         , rotateRight
         , rotateRightBy
         , set
+        , setWith
         , shiftLeft
         , shiftLeftBy
         , shiftRight
@@ -218,6 +219,16 @@ reset n (Byte b) =
         |> Bitwise.complement
         |> Bitwise.and b
         |> fromInt
+
+
+{-| Sets or resets the nth bit of the `Byte`.
+-}
+setWith : Int -> Bool -> Byte -> Byte
+setWith n shouldSet byte =
+    if shouldSet then
+        set n byte
+    else
+        reset n byte
 
 
 {-| Shifts Byte left once.

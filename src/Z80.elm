@@ -171,6 +171,7 @@ executeOp op state =
             in
                 byte
                     |> Byte.rotateLeft
+                    |> Byte.setWith 0 (Flag.isSet Flag.Carry state.f)
                     |> writeByteRegister A state
                     |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
                     |> setFlagsWith [ Flag.Carry => Byte.msbSet byte ]
