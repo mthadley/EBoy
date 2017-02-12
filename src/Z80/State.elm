@@ -7,11 +7,12 @@ import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
 import Memory exposing (Memory)
-import Word exposing (Word)
-import Z80.Flag as Flag exposing (Flag)
-import Z80.Cycles exposing (Cycles(..))
-import Z80.Registers exposing (..)
 import Util
+import Word exposing (Word)
+import Z80.Cycles exposing (Cycles(..))
+import Z80.Flag as Flag exposing (Flag)
+import Z80.Mode as Mode exposing (Mode)
+import Z80.Registers exposing (..)
 
 
 {-| A record representing the current state of the CPU.
@@ -29,6 +30,7 @@ type alias State =
     , f : Byte
     , pc : Word {- 16-bit registers -}
     , sp : Word
+    , mode : Mode
     }
 
 
@@ -46,6 +48,7 @@ init =
     , f = Byte.fromInt 0
     , pc = Word.fromInt 0
     , sp = Word.fromInt 0
+    , mode = Mode.Running
     }
 
 

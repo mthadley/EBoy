@@ -12,6 +12,7 @@ import Z80.Flag as Flag exposing (Flag)
 import Z80.LB as LB
 import Z80.LO as LO
 import Z80.LW as LW
+import Z80.Mode as Mode
 import Z80.Op exposing (..)
 import Z80.Registers exposing (..)
 import Z80.State as State exposing (..)
@@ -135,6 +136,45 @@ executeOp op state =
                 |> uncurry setCarryFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
+
+        ADDSP ->
+            let
+                ( byte, newState ) =
+                    readDataByte state
+            in
+                Word.addc (readWordRegister SP newState) (Word.fromByte byte)
+                    |> Util.clone
+                    |> Tuple.mapSecond (writeWordRegister SP newState << Carry.value)
+                    |> uncurry setCarryFlags
+                    |> resetFlags [ Flag.Zero, Flag.Subtract ]
+                    |> incPC
+
+        RRCA ->
+            let
+                byte =
+                    readByteRegister A state
+            in
+                byte
+                    |> Byte.rotateRight
+                    |> writeByteRegister A state
+                    |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
+                    |> setFlagsWith [ Flag.Carry => Byte.lsbSet byte ]
+                    |> incPC
+
+        STOP ->
+            incPC <| { state | mode = Mode.Stopped }
+
+        RLA ->
+            let
+                byte =
+                    readByteRegister A state
+            in
+                byte
+                    |> Byte.rotateLeft
+                    |> writeByteRegister A state
+                    |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
+                    |> setFlagsWith [ Flag.Carry => Byte.msbSet byte ]
+                    |> incPC
 
         _ ->
             state
