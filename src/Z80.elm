@@ -99,10 +99,7 @@ executeOp op state =
                 |> incPC
 
         INCW register ->
-            readWordRegister register state
-                |> Word.inc
-                |> writeWordRegister register state
-                |> incPC
+            incPC <| applyWordWith Word.inc register state
 
         DEC param ->
             applyWith Byte.decc param state
@@ -111,10 +108,7 @@ executeOp op state =
                 |> incPC
 
         DECW register ->
-            readWordRegister register state
-                |> Word.dec
-                |> writeWordRegister register state
-                |> incPC
+            incPC <| applyWordWith Word.dec register state
 
         ADD param ->
             accumulateWith Byte.addc param state
@@ -181,6 +175,12 @@ executeOp op state =
 
         RRA ->
             rotateA Right state
+
+        LDI target source ->
+            LB.readSource source state
+                |> LB.writeTarget target
+                |> applyWordWith Word.inc HL
+                |> incPC
 
         _ ->
             state
@@ -250,6 +250,13 @@ applyWith f param state =
             readMemRegister HL state
                 |> Util.cloneWith f
                 |> Tuple.mapSecond (writeMemRegister HL state << Carry.value)
+
+
+applyWordWith : (Word -> Word) -> WordRegister -> State -> State
+applyWordWith f register state =
+    readWordRegister register state
+        |> f
+        |> writeWordRegister register state
 
 
 type Rotation
