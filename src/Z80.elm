@@ -1,4 +1,4 @@
-module Z80 exposing (..)
+module Z80 exposing (next)
 
 import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
@@ -165,17 +165,7 @@ executeOp op state =
             incPC <| { state | mode = Mode.Stopped }
 
         RLA ->
-            let
-                byte =
-                    readByteRegister A state
-            in
-                byte
-                    |> Byte.rotateLeft
-                    |> Byte.setWith 0 (Flag.isSet Flag.Carry state.f)
-                    |> writeByteRegister A state
-                    |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
-                    |> setFlagsWith [ Flag.Carry => Byte.msbSet byte ]
-                    |> incPC
+            rotateA Left state
 
         JR condition ->
             if shouldJump condition state then
@@ -188,6 +178,9 @@ executeOp op state =
                     |> Tuple.second
                     |> setJump False
                     |> incPC
+
+        RRA ->
+            rotateA Right state
 
         _ ->
             state
@@ -257,6 +250,34 @@ applyWith f param state =
             readMemRegister HL state
                 |> Util.cloneWith f
                 |> Tuple.mapSecond (writeMemRegister HL state << Carry.value)
+
+
+type Rotation
+    = Left
+    | Right
+
+
+rotateA : Rotation -> State -> State
+rotateA direction state =
+    let
+        byte =
+            readByteRegister A state
+
+        ( rotation, bit, isBitSet ) =
+            case direction of
+                Left ->
+                    ( Byte.rotateLeft, 0, Byte.msbSet )
+
+                Right ->
+                    ( Byte.rotateRight, 7, Byte.lsbSet )
+    in
+        byte
+            |> rotation
+            |> Byte.setWith bit (Flag.isSet Flag.Carry state.f)
+            |> writeByteRegister A state
+            |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
+            |> setFlagsWith [ Flag.Carry => isBitSet byte ]
+            |> incPC
 
 
 shouldJump : FlagCondition -> State -> Bool
