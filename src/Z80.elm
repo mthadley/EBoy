@@ -176,6 +176,18 @@ executeOp op state =
                     |> setFlagsWith [ Flag.Carry => Byte.msbSet byte ]
                     |> incPC
 
+        JR condition ->
+            if shouldJump condition state then
+                readDataByte state
+                    |> uncurry addPCByte
+                    |> setJump True
+                    |> incPC
+            else
+                readDataByte state
+                    |> Tuple.second
+                    |> setJump False
+                    |> incPC
+
         _ ->
             state
 
@@ -244,3 +256,21 @@ applyWith f param state =
             readMemRegister HL state
                 |> Util.cloneWith f
                 |> Tuple.mapSecond (writeMemRegister HL state << Carry.value)
+
+
+shouldJump : FlagCondition -> State -> Bool
+shouldJump condition state =
+    case condition of
+        NoCondition ->
+            True
+
+        Set flag ->
+            Flag.isSet flag state.f
+
+        NotSet flag ->
+            not <| Flag.isSet flag state.f
+
+
+setJump : Bool -> State -> State
+setJump jump state =
+    { state | jump = jump }

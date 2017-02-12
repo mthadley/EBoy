@@ -31,6 +31,7 @@ type alias State =
     , pc : Word {- 16-bit registers -}
     , sp : Word
     , mode : Mode
+    , jump : Bool
     }
 
 
@@ -49,6 +50,7 @@ init =
     , pc = Word.fromInt 0
     , sp = Word.fromInt 0
     , mode = Mode.Running
+    , jump = False
     }
 
 
@@ -232,16 +234,22 @@ readByteRegister register state =
 
 updateClock : Cycles -> State -> State
 updateClock cycles state =
-    let
-        count =
-            case cycles of
-                Always c ->
-                    c
+    case cycles of
+        Always c ->
+            { state | clock = state.clock + c }
 
-                Branching taken notTaken ->
-                    taken
-    in
-        { state | clock = state.clock + count }
+        Branching taken notTaken ->
+            let
+                c =
+                    if state.jump then
+                        taken
+                    else
+                        notTaken
+            in
+                { state
+                    | clock = state.clock + c
+                    , jump = False
+                }
 
 
 
@@ -251,6 +259,11 @@ updateClock cycles state =
 addPC : Int -> State -> State
 addPC n state =
     { state | pc = Word.add state.pc <| Word.fromInt n }
+
+
+addPCByte : Byte -> State -> State
+addPCByte byte =
+    addPC <| Byte.toInt byte
 
 
 incPC : State -> State

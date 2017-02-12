@@ -7,6 +7,7 @@ import Z80.LB as LB
 import Z80.LO as LO
 import Z80.LW as LW
 import Z80.Registers exposing (..)
+import Z80.Flag exposing (Flag)
 
 
 {-| Jump Targets
@@ -31,18 +32,11 @@ type Param
     | OnMemHL
 
 
-{-| Flags checked by jump instructions.
--}
-type JumpFlag
-    = Zero
-    | Carry
-
-
 {-| Represents states when a jump instruction will execute.
 -}
 type FlagCondition
-    = Set JumpFlag
-    | NotSet JumpFlag
+    = Set Flag
+    | NotSet Flag
     | NoCondition
 
 
