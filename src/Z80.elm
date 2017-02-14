@@ -182,6 +182,21 @@ executeOp op state =
                 |> applyWordWith Word.inc HL
                 |> incPC
 
+        DAA ->
+            let
+                subtract =
+                    Flag.isSet Flag.Subtract state.f
+            in
+                readByteRegister A state
+                    |> bcdCorrect Low (Flag.isSet Flag.HalfCarry state.f) subtract
+                    |> Carry.value
+                    |> bcdCorrect High (Flag.isSet Flag.Carry state.f) subtract
+                    |> Util.clone
+                    |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
+                    |> uncurry setAccFlags
+                    |> resetFlag Flag.HalfCarry
+                    |> incPC
+
         _ ->
             state
 
@@ -287,6 +302,10 @@ rotateA direction state =
             |> incPC
 
 
+
+-- Jumps
+
+
 shouldJump : FlagCondition -> State -> Bool
 shouldJump condition state =
     case condition of
@@ -303,3 +322,35 @@ shouldJump condition state =
 setJump : Bool -> State -> State
 setJump jump state =
     { state | jump = jump }
+
+
+
+-- Binary-coded Decimal
+
+
+type Nibble
+    = High
+    | Low
+
+
+bcdCorrect : Nibble -> Bool -> Bool -> Byte -> Carry Byte
+bcdCorrect nibble wasCarry wasSub byte =
+    let
+        ( val, getNibble ) =
+            case nibble of
+                High ->
+                    ( 0x60, Byte.highNibble )
+
+                Low ->
+                    ( 0x06, Byte.lowNibble )
+
+        amount =
+            if wasSub then
+                val * -1
+            else
+                val
+    in
+        if wasCarry || getNibble byte > 9 then
+            Byte.addc byte <| Byte.fromInt amount
+        else
+            Carry.withoutOp byte

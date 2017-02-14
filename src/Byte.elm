@@ -8,9 +8,11 @@ module Byte
         , decc
         , fromInt
         , getBit
+        , highNibble
         , inc
         , incc
         , isZero
+        , lowNibble
         , lsbSet
         , msbSet
         , or
@@ -171,6 +173,20 @@ lsbSet =
 getBit : Int -> Byte -> Bool
 getBit n (Byte b) =
     (Bitwise.and 1 <| Bitwise.shiftRightBy n b) == 1
+
+
+{-| Returns an `Int` respresenting the higher 4 bits.
+-}
+highNibble : Byte -> Int
+highNibble =
+    toInt << shiftRightZfBy 4
+
+
+{-| Returns an `Int` respresenting the lower 4 bits.
+-}
+lowNibble : Byte -> Int
+lowNibble (Byte b) =
+    maskLower b
 
 
 {-| Rotate byte left.

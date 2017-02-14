@@ -5,6 +5,7 @@ module Carry
         , value
         , check
         , checkHalf
+        , withoutOp
         )
 
 {-| Opaque type representing the result of an operation and whether or not
@@ -29,6 +30,17 @@ create value carry halfCarry =
         { value = value
         , carry = carry
         , halfCarry = halfCarry
+        }
+
+
+{-| Used to create a `Carry` that was not a result of some kind of operation.
+-}
+withoutOp : a -> Carry a
+withoutOp a =
+    Carry
+        { value = a
+        , carry = False
+        , halfCarry = False
         }
 
 
