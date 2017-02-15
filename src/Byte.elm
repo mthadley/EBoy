@@ -4,6 +4,7 @@ module Byte
         , add
         , addc
         , and
+        , complement
         , dec
         , decc
         , fromInt
@@ -104,6 +105,13 @@ addc (Byte x) (Byte y) =
             (fromInt sum)
             (sum > 255)
             (Bitwise.and ((maskLower x) + (maskLower y)) 0x10 > 0)
+
+
+{-| Bitwise complement (Flips each bit).
+-}
+complement : Byte -> Byte
+complement (Byte b) =
+    fromInt <| Bitwise.complement b
 
 
 {-| Subtracts the second `Byte` from the first.

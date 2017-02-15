@@ -197,6 +197,13 @@ executeOp op state =
                     |> resetFlag Flag.HalfCarry
                     |> incPC
 
+        CPL ->
+            readByteRegister A state
+                |> Byte.complement
+                |> writeByteRegister A state
+                |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
+                |> incPC
+
         _ ->
             state
 
