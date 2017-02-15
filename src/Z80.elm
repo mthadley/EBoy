@@ -216,6 +216,12 @@ executeOp op state =
                 |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
                 |> incPC
 
+        CCF ->
+            state
+                |> setFlagsWith [ Flag.Carry => (not <| Flag.isSet Flag.Carry state.f) ]
+                |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
+                |> incPC
+
         _ ->
             state
 
