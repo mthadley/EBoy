@@ -210,6 +210,12 @@ executeOp op state =
                 |> applyWordWith Word.dec HL
                 |> incPC
 
+        SCF ->
+            state
+                |> setFlag Flag.Carry
+                |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
+                |> incPC
+
         _ ->
             state
 
