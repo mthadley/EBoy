@@ -222,6 +222,9 @@ executeOp op state =
                 |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
                 |> incPC
 
+        HALT ->
+            incPC <| { state | mode = Mode.Halted }
+
         _ ->
             state
 

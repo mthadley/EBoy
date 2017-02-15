@@ -7,4 +7,5 @@ should stop and wait until a button is pressed.
 
 type Mode
     = Running
+    | Halted
     | Stopped
