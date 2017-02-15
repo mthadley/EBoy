@@ -204,6 +204,12 @@ executeOp op state =
                 |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
                 |> incPC
 
+        LDD target source ->
+            LB.readSource source state
+                |> LB.writeTarget target
+                |> applyWordWith Word.dec HL
+                |> incPC
+
         _ ->
             state
 
