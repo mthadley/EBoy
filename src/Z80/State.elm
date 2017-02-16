@@ -330,6 +330,13 @@ setIncFlags result =
         ]
 
 
+setZeroFlag : Byte -> State -> State
+setZeroFlag byte =
+    setFlagsWith
+        [ Flag.Zero => (Byte.isZero byte)
+        ]
+
+
 getFlagByte : Flag -> State -> Byte
 getFlagByte flag state =
     Flag.isSet flag state.f

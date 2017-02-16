@@ -111,7 +111,7 @@ executeOp op state =
             incPC <| applyWordWith Word.dec register state
 
         ADD param ->
-            accumulateWith Byte.addc param state
+            accCarryWith Byte.addc param state
                 |> uncurry setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
@@ -226,7 +226,7 @@ executeOp op state =
             incPC <| { state | mode = Mode.Halted }
 
         SUB param ->
-            accumulateWith Byte.subc param state
+            accCarryWith Byte.subc param state
                 |> uncurry setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
@@ -237,19 +237,37 @@ executeOp op state =
                 |> setFlag Flag.Subtract
                 |> incPC
 
+        AND param ->
+            accByteWith Byte.and param state
+                |> uncurry setZeroFlag
+                |> resetFlags [ Flag.Subtract, Flag.Carry ]
+                |> setFlag Flag.HalfCarry
+                |> incPC
+
         _ ->
             state
 
 
+accByteWith : (Byte -> Byte -> Byte) -> ParamData -> State -> ( Byte, State )
+accByteWith =
+    accumulateWith identity
+
+
+accCarryWith : (Byte -> Byte -> Carry Byte) -> ParamData -> State -> ( Carry Byte, State )
+accCarryWith =
+    accumulateWith Carry.value
+
+
 accumulateWith :
-    (Byte -> Byte -> Carry Byte)
+    (a -> Byte)
+    -> (Byte -> Byte -> a)
     -> ParamData
     -> State
-    -> ( Carry Byte, State )
-accumulateWith f param state =
+    -> ( a, State )
+accumulateWith f g param state =
     readParamData param state
-        |> Tuple.mapFirst (f <| readByteRegister A state)
-        |> writeAccumulator
+        |> Tuple.mapFirst (g <| readByteRegister A state)
+        |> writeAccumulator f
 
 
 accumulateCarryWith :
@@ -266,7 +284,7 @@ accumulateCarryWith f param state =
     in
         readParamData param state
             |> Tuple.mapFirst (f operand)
-            |> writeAccumulator
+            |> writeAccumulator Carry.value
 
 
 readParamData : ParamData -> State -> ( Byte, State )
@@ -282,10 +300,10 @@ readParamData param state =
             readDataByte state
 
 
-writeAccumulator : ( Carry Byte, State ) -> ( Carry Byte, State )
-writeAccumulator ( result, state ) =
+writeAccumulator : (a -> Byte) -> ( a, State ) -> ( a, State )
+writeAccumulator f ( result, state ) =
     ( result
-    , writeByteRegister A state <| Carry.value result
+    , writeByteRegister A state <| f result
     )
 
 
