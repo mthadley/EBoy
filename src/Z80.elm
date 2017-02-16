@@ -231,6 +231,12 @@ executeOp op state =
                 |> setFlag Flag.Subtract
                 |> incPC
 
+        SBC param ->
+            accumulateCarryWith Byte.subc param state
+                |> uncurry setAccFlags
+                |> setFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 
