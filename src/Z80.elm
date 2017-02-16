@@ -225,6 +225,12 @@ executeOp op state =
         HALT ->
             incPC <| { state | mode = Mode.Halted }
 
+        SUB param ->
+            accumulateWith Byte.subc param state
+                |> uncurry setAccFlags
+                |> setFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 

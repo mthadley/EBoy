@@ -129,7 +129,7 @@ subc (Byte x) (Byte y) =
     Carry.create
         (fromInt <| x - y)
         (x < y)
-        (maskLower x < maskLower y)
+        ((maskHigher x) < (maskHigher y))
 
 
 {-| Increment a Byte.
@@ -326,6 +326,11 @@ rotate left n (Byte b) =
 mask : Int -> Int
 mask =
     Bitwise.and 0xFF
+
+
+maskHigher : Int -> Int
+maskHigher =
+    Bitwise.and 0xF0
 
 
 maskLower : Int -> Int
