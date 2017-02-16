@@ -250,6 +250,12 @@ executeOp op state =
                 |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
                 |> incPC
 
+        XOR param ->
+            accByteWith Byte.xor param state
+                |> uncurry setZeroFlag
+                |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
+                |> incPC
+
         _ ->
             state
 

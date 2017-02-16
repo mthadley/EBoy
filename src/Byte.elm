@@ -33,6 +33,7 @@ module Byte
         , sub
         , subc
         , toInt
+        , xor
         )
 
 import Bitwise
@@ -91,6 +92,13 @@ and (Byte a) (Byte b) =
 or : Byte -> Byte -> Byte
 or (Byte a) (Byte b) =
     Byte <| Bitwise.or a b
+
+
+{-| Bitwise xor two `Byte`s.
+-}
+xor : Byte -> Byte -> Byte
+xor (Byte a) (Byte b) =
+    Byte <| Bitwise.xor a b
 
 
 {-| Adds two `Byte`s, returning a `Carry`.
