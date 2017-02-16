@@ -80,8 +80,8 @@ type Op
     | SUB ParamData
     | SBC ParamData
     | AND ParamData
-    | XOR ParamData
     | OR ParamData
+    | XOR ParamData
     | CP ParamData
     | RET FlagCondition
     | POP WordRegister

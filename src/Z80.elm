@@ -244,6 +244,12 @@ executeOp op state =
                 |> setFlag Flag.HalfCarry
                 |> incPC
 
+        OR param ->
+            accByteWith Byte.or param state
+                |> uncurry setZeroFlag
+                |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
+                |> incPC
+
         _ ->
             state
 
