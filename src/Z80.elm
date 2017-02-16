@@ -117,7 +117,7 @@ executeOp op state =
                 |> incPC
 
         ADC param ->
-            accumulateCarryWith Byte.addc param state
+            accPlusCarryWith Byte.addc param state
                 |> uncurry setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
@@ -232,7 +232,7 @@ executeOp op state =
                 |> incPC
 
         SBC param ->
-            accumulateCarryWith Byte.subc param state
+            accPlusCarryWith Byte.subc param state
                 |> uncurry setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
@@ -276,12 +276,12 @@ accumulateWith f g param state =
         |> writeAccumulator f
 
 
-accumulateCarryWith :
+accPlusCarryWith :
     (Byte -> Byte -> Carry Byte)
     -> ParamData
     -> State
     -> ( Carry Byte, State )
-accumulateCarryWith f param state =
+accPlusCarryWith f param state =
     let
         operand =
             Byte.add
