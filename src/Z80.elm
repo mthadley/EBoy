@@ -165,12 +165,11 @@ executeOp op state =
             if shouldJump condition state then
                 readDataByte state
                     |> uncurry addPCByte
-                    |> setJump True
+                    |> setJump
                     |> incPC
             else
                 readDataByte state
                     |> Tuple.second
-                    |> setJump False
                     |> incPC
 
         RRA ->
@@ -262,6 +261,15 @@ executeOp op state =
                 |> uncurry setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
+
+        RET condition ->
+            if shouldJump condition state then
+                readMemWordRegister SP state
+                    |> writeWordRegister PC state
+                    |> addSP 2
+                    |> setJump
+            else
+                incPC <| state
 
         _ ->
             state
@@ -396,9 +404,9 @@ shouldJump condition state =
             not <| Flag.isSet flag state.f
 
 
-setJump : Bool -> State -> State
-setJump jump state =
-    { state | jump = jump }
+setJump : State -> State
+setJump state =
+    { state | jump = True }
 
 
 

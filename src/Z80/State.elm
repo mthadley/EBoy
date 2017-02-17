@@ -162,6 +162,11 @@ readMemRegister wordRegister state =
     Memory.readByte (readWordRegister wordRegister state) state.memory
 
 
+readMemWordRegister : WordRegister -> State -> Word
+readMemWordRegister register state =
+    Memory.readWord state.sp state.memory
+
+
 readMemRegisterOffset : ByteRegister -> State -> Byte
 readMemRegisterOffset register state =
     let
@@ -274,6 +279,20 @@ incPC =
 wordOffset : Byte -> Word
 wordOffset =
     Word.add (Word.fromInt 0xFF00) << Word.fromByte
+
+
+
+-- SP
+
+
+addSP : Int -> State -> State
+addSP n state =
+    { state | sp = Word.add state.sp <| Word.fromInt n }
+
+
+incSP : State -> State
+incSP =
+    addSP 1
 
 
 
