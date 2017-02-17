@@ -256,6 +256,13 @@ executeOp op state =
                 |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
                 |> incPC
 
+        CP param ->
+            readParamData param state
+                |> Tuple.mapFirst (Byte.subc <| readByteRegister A state)
+                |> uncurry setAccFlags
+                |> setFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 
