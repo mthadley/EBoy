@@ -277,6 +277,14 @@ executeOp op state =
                 |> addSP 2
                 |> incPC
 
+        JP condition target ->
+            if shouldJump condition state then
+                readJumpTarget target state
+                    |> writeWordRegister PC state
+                    |> setJump
+            else
+                incPC <| state
+
         _ ->
             state
 
@@ -413,6 +421,16 @@ shouldJump condition state =
 setJump : State -> State
 setJump state =
     { state | jump = True }
+
+
+readJumpTarget : JumpTarget -> State -> Word
+readJumpTarget target state =
+    case target of
+        JumpData ->
+            Tuple.first <| readDataWord state
+
+        JumpMemHL ->
+            readMemWordRegister HL state
 
 
 
