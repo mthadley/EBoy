@@ -271,6 +271,12 @@ executeOp op state =
             else
                 incPC <| state
 
+        POP register ->
+            readMemWordRegister SP state
+                |> writeWordRegister register state
+                |> addSP 2
+                |> incPC
+
         _ ->
             state
 
