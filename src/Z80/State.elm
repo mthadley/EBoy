@@ -65,12 +65,13 @@ writeMemWord addr word state =
 
 
 writeMemRegister : WordRegister -> State -> Byte -> State
-writeMemRegister wordRegister state byte =
-    let
-        addr =
-            readWordRegister wordRegister state
-    in
-        writeMemByte addr byte state
+writeMemRegister register state byte =
+    writeMemByte (readWordRegister register state) byte state
+
+
+writeMemRegisterWord : WordRegister -> State -> Word -> State
+writeMemRegisterWord register state word =
+    writeMemWord (readWordRegister register state) word state
 
 
 writeByteRegister : ByteRegister -> State -> Byte -> State
@@ -288,11 +289,6 @@ wordOffset =
 addSP : Int -> State -> State
 addSP n state =
     { state | sp = Word.add state.sp <| Word.fromInt n }
-
-
-incSP : State -> State
-incSP =
-    addSP 1
 
 
 

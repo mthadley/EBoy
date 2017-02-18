@@ -285,6 +285,18 @@ executeOp op state =
             else
                 incPC <| state
 
+        CALL condition ->
+            if shouldJump condition state then
+                state
+                    |> addPC 3
+                    |> readWordRegister PC
+                    |> writeMemRegisterWord SP state
+                    |> readDataWord
+                    |> uncurry (flip <| writeWordRegister PC)
+                    |> addSP -2
+            else
+                incPC <| state
+
         _ ->
             state
 
