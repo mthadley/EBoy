@@ -288,19 +288,20 @@ executeOp op state =
         CALL condition ->
             if shouldJump condition state then
                 state
-                    |> addPC 3
-                    |> readWordRegister PC
-                    |> writeMemRegisterWord SP state
+                    |> decSP
+                    |> Util.clone
+                    |> Tuple.mapSecond (Word.addInt 3 << readWordRegister PC)
+                    |> uncurry (writeMemRegisterWord SP)
+                    |> decSP
                     |> readDataWord
                     |> uncurry (flip <| writeWordRegister PC)
-                    |> addSP -2
             else
                 incPC <| state
 
         PUSH register ->
             readWordRegister register state
-                |> writeMemRegisterWord SP state
-                |> addSP -2
+                |> writeMemRegisterWord SP (decSP state)
+                |> decSP
                 |> incPC
 
         _ ->

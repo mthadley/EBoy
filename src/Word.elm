@@ -2,6 +2,7 @@ module Word
     exposing
         ( Word
         , add
+        , addInt
         , addc
         , dec
         , decc
@@ -75,6 +76,14 @@ toBytes (Word w) =
 add : Word -> Word -> Word
 add a b =
     Carry.value <| addc a b
+
+
+{-| Adds an Int to word. The int will be converted to a `Word` before the
+addition.
+-}
+addInt : Int -> Word -> Word
+addInt int word =
+    add word <| fromInt int
 
 
 {-| Adds two `Word`s, and returns a `Carry`.

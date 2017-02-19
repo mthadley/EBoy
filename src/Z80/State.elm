@@ -48,7 +48,7 @@ init =
     , l = Byte.fromInt 0
     , f = Byte.fromInt 0
     , pc = Word.fromInt 0
-    , sp = Word.fromInt 0
+    , sp = Word.fromInt 0xFFFE
     , mode = Mode.Running
     , jump = False
     }
@@ -142,9 +142,13 @@ writeWordRegister register state word =
 
 readDataWord : State -> ( Word, State )
 readDataWord state =
-    ( Memory.readWord state.pc state.memory
-    , addPC 2 state
-    )
+    let
+        newState =
+            incPC state
+    in
+        ( Memory.readWord newState.pc state.memory
+        , incPC newState
+        )
 
 
 readDataByte : State -> ( Byte, State )
@@ -283,12 +287,17 @@ wordOffset =
 
 
 
--- SP
+-- Stack Pointer
 
 
 addSP : Int -> State -> State
 addSP n state =
     { state | sp = Word.add state.sp <| Word.fromInt n }
+
+
+decSP : State -> State
+decSP =
+    addSP -1
 
 
 
