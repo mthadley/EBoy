@@ -297,7 +297,23 @@ addSP n state =
 
 decSP : State -> State
 decSP =
-    addSP -1
+    addSP -2
+
+
+incSP : State -> State
+incSP =
+    addSP 2
+
+
+pushSP : WordRegister -> State -> State
+pushSP register state =
+    readWordRegister register state
+        |> writeMemRegisterWord SP (decSP state)
+
+
+pushSPWord : State -> Word -> State
+pushSPWord state word =
+    writeMemRegisterWord SP (decSP state) word
 
 
 
