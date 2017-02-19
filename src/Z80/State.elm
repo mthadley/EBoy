@@ -316,6 +316,13 @@ pushSPWord state word =
     writeMemRegisterWord SP (decSP state) word
 
 
+popSP : WordRegister -> State -> State
+popSP register state =
+    readMemWordRegister SP state
+        |> writeWordRegister register state
+        |> incSP
+
+
 
 -- Flags
 

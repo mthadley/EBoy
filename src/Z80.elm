@@ -264,18 +264,12 @@ executeOp op state =
 
         RET condition ->
             if shouldJump condition state then
-                readMemWordRegister SP state
-                    |> writeWordRegister PC state
-                    |> incSP
-                    |> setJump
+                setJump <| popSP PC state
             else
                 incPC <| state
 
         POP register ->
-            readMemWordRegister SP state
-                |> writeWordRegister register state
-                |> incSP
-                |> incPC
+            incPC <| popSP register state
 
         JP condition target ->
             if shouldJump condition state then
