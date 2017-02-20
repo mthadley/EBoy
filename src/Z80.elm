@@ -72,10 +72,10 @@ executeOp op state =
             Debug.crash <| toString x
 
         NONE ->
-            incPC <| state
+            incPC state
 
         NOP ->
-            incPC <| state
+            incPC state
 
         LD target source ->
             LB.readSource source state
@@ -294,6 +294,9 @@ executeOp op state =
 
         RST offset ->
             writeWordRegister PC (pushSP PC state) (Word.fromInt offset)
+
+        PREFIX_CB ->
+            incPC state
 
         _ ->
             state
