@@ -310,6 +310,12 @@ executeOp op state =
         RR param ->
             incPC <| rotate param Right True state
 
+        SLA param ->
+            applyWith Byte.shiftLeft param state
+                |> uncurry setAccFlags
+                |> resetFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 

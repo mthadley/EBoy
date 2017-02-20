@@ -19,17 +19,12 @@ module Byte
         , or
         , reset
         , rotateLeft
-        , rotateLeftBy
         , rotateRight
-        , rotateRightBy
         , set
         , setWith
         , shiftLeft
-        , shiftLeftBy
         , shiftRight
-        , shiftRightBy
         , shiftRightZf
-        , shiftRightZfBy
         , sub
         , subc
         , toInt
@@ -194,8 +189,8 @@ getBit n (Byte b) =
 {-| Returns an `Int` respresenting the higher 4 bits.
 -}
 highNibble : Byte -> Int
-highNibble =
-    toInt << shiftRightZfBy 4
+highNibble (Byte b) =
+    Bitwise.shiftRightZfBy 4 b
 
 
 {-| Returns an `Int` respresenting the lower 4 bits.
@@ -209,28 +204,14 @@ lowNibble (Byte b) =
 -}
 rotateLeft : Byte -> Byte
 rotateLeft =
-    rotateLeftBy 1
+    rotate Left
 
 
 {-| Rotate byte right.
 -}
 rotateRight : Byte -> Byte
 rotateRight =
-    rotateRightBy 1
-
-
-{-| Rotate byte left N times.
--}
-rotateLeftBy : Int -> Byte -> Byte
-rotateLeftBy =
-    rotate True
-
-
-{-| Rotate byte right N times.
--}
-rotateRightBy : Int -> Byte -> Byte
-rotateRightBy =
-    rotate False
+    rotate Right
 
 
 {-| Sets the nth bit of the `Byte`.
@@ -263,67 +244,55 @@ setWith n shouldSet byte =
         reset n byte
 
 
-{-| Shifts Byte left once.
+{-| Shifts Byte left.
 -}
-shiftLeft : Byte -> Byte
-shiftLeft =
-    shiftLeftBy 1
+shiftLeft : Byte -> Carry Byte
+shiftLeft ((Byte b) as byte) =
+    Carry.create
+        (fromInt <| Bitwise.shiftLeftBy 1 b)
+        (msbSet byte)
+        False
 
 
-{-| Shifts Byte left n times.
+{-| Shifts Byte right, preserving sign.
 -}
-shiftLeftBy : Int -> Byte -> Byte
-shiftLeftBy n (Byte b) =
-    fromInt <| Bitwise.shiftLeftBy n b
-
-
-{-| Shifts Byte right once, preserving sign.
--}
-shiftRight : Byte -> Byte
-shiftRight =
-    shiftRightBy 1
-
-
-{-| Shifts Byte right n times, preserving sign.
--}
-shiftRightBy : Int -> Byte -> Byte
-shiftRightBy n ((Byte b) as byte) =
+shiftRight : Byte -> Carry Byte
+shiftRight ((Byte b) as byte) =
     let
-        sign =
-            if msbSet byte then
-                Bitwise.complement 0
-                    |> Bitwise.shiftLeftBy (8 - n)
-                    |> mask
-            else
-                0
+        result =
+            b
+                |> Bitwise.shiftRightBy 1
+                |> Byte
+                |> setWith 7 (msbSet byte)
     in
-        sign
-            |> Bitwise.or (Bitwise.shiftRightZfBy n b)
-            |> Byte
+        Carry.create result (lsbSet byte) False
 
 
-{-| Shifts Byte right once, filling with zeroes.
+{-| Shifts `Byte` right, filling with zeroes.
 -}
-shiftRightZf : Byte -> Byte
-shiftRightZf =
-    shiftRightZfBy 1
+shiftRightZf : Byte -> Carry Byte
+shiftRightZf ((Byte b) as byte) =
+    Carry.create
+        (Byte <| Bitwise.shiftRightZfBy 1 b)
+        (lsbSet byte)
+        False
 
 
-{-| Shifts Byte right n times, filling with zeroes.
--}
-shiftRightZfBy : Int -> Byte -> Byte
-shiftRightZfBy n (Byte b) =
-    Byte <| Bitwise.shiftRightZfBy n b
+type Rotation
+    = Left
+    | Right
 
 
-rotate : Bool -> Int -> Byte -> Byte
-rotate left n (Byte b) =
+rotate : Rotation -> Byte -> Byte
+rotate rotation (Byte b) =
     let
         ( leftTimes, rightTimes ) =
-            if left then
-                ( n, 8 - n )
-            else
-                ( 8 - n, n )
+            case rotation of
+                Left ->
+                    ( 1, 7 )
+
+                Right ->
+                    ( 7, 1 )
     in
         fromInt <|
             Bitwise.or
