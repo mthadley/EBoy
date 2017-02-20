@@ -144,22 +144,13 @@ executeOp op state =
                     |> incPC
 
         RRCA ->
-            let
-                byte =
-                    readByteRegister A state
-            in
-                byte
-                    |> Byte.rotateRight
-                    |> writeByteRegister A state
-                    |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
-                    |> setFlagsWith [ Flag.Carry => Byte.lsbSet byte ]
-                    |> incPC
+            incPC <| rotate (OnRegister A) Right False state
 
         STOP ->
             incPC <| { state | mode = Mode.Stopped }
 
         RLA ->
-            rotateA Left state
+            incPC <| rotate (OnRegister A) Left True state
 
         JR condition ->
             if shouldJump condition state then
@@ -173,7 +164,7 @@ executeOp op state =
                     |> incPC
 
         RRA ->
-            rotateA Right state
+            incPC <| rotate (OnRegister A) Right True state
 
         LDI target source ->
             LB.readSource source state
@@ -307,6 +298,18 @@ executeOp op state =
         EI ->
             incPC <| enableInterrupts True state
 
+        RLC param ->
+            incPC <| rotate param Left False state
+
+        RRC param ->
+            incPC <| rotate param Right False state
+
+        RL param ->
+            incPC <| rotate param Left True state
+
+        RR param ->
+            incPC <| rotate param Right True state
+
         _ ->
             state
 
@@ -376,16 +379,9 @@ applyWith :
     -> State
     -> ( Carry Byte, State )
 applyWith f param state =
-    case param of
-        OnRegister register ->
-            readByteRegister register state
-                |> Util.cloneWith f
-                |> Tuple.mapSecond (writeByteRegister register state << Carry.value)
-
-        OnMemHL ->
-            readMemRegister HL state
-                |> Util.cloneWith f
-                |> Tuple.mapSecond (writeMemRegister HL state << Carry.value)
+    readParam param state
+        |> Util.cloneWith f
+        |> Tuple.mapSecond (writeParam param state << Carry.value)
 
 
 applyWordWith : (Word -> Word) -> WordRegister -> State -> State
@@ -400,11 +396,11 @@ type Rotation
     | Right
 
 
-rotateA : Rotation -> State -> State
-rotateA direction state =
+rotate : Param -> Rotation -> Bool -> State -> State
+rotate param direction throughCarry state =
     let
         byte =
-            readByteRegister A state
+            readParam param state
 
         ( rotation, bit, isBitSet ) =
             case direction of
@@ -413,14 +409,43 @@ rotateA direction state =
 
                 Right ->
                     ( Byte.rotateRight, 7, Byte.lsbSet )
+
+        carryIn =
+            if throughCarry then
+                Byte.setWith bit (Flag.isSet Flag.Carry state.f)
+            else
+                identity
+
+        result =
+            carryIn <| rotation <| byte
     in
-        byte
-            |> rotation
-            |> Byte.setWith bit (Flag.isSet Flag.Carry state.f)
-            |> writeByteRegister A state
-            |> resetFlags [ Flag.Zero, Flag.Subtract, Flag.HalfCarry ]
-            |> setFlagsWith [ Flag.Carry => isBitSet byte ]
-            |> incPC
+        result
+            |> writeParam param state
+            |> resetFlags [ Flag.Subtract, Flag.HalfCarry ]
+            |> setFlagsWith
+                [ Flag.Carry => isBitSet byte
+                , Flag.Zero => Byte.isZero result
+                ]
+
+
+readParam : Param -> State -> Byte
+readParam param state =
+    case param of
+        OnRegister register ->
+            readByteRegister register state
+
+        OnMemHL ->
+            readMemRegister HL state
+
+
+writeParam : Param -> State -> Byte -> State
+writeParam param state byte =
+    case param of
+        OnRegister register ->
+            writeByteRegister register state byte
+
+        OnMemHL ->
+            writeMemRegister HL state byte
 
 
 

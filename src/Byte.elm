@@ -325,7 +325,7 @@ rotate left n (Byte b) =
             else
                 ( 8 - n, n )
     in
-        Byte <|
+        fromInt <|
             Bitwise.or
                 (mask <| Bitwise.shiftLeftBy leftTimes b)
                 (Bitwise.shiftRightZfBy rightTimes b)
