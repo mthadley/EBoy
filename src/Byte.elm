@@ -27,6 +27,7 @@ module Byte
         , shiftRightZf
         , sub
         , subc
+        , swap
         , toInt
         , xor
         )
@@ -222,6 +223,15 @@ set n (Byte b) =
         |> mask
         |> Bitwise.or b
         |> Byte
+
+
+{-| Swaps the high and low nibbles of the `Byte`.
+-}
+swap : Byte -> Byte
+swap byte =
+    Byte <|
+        (Bitwise.shiftLeftBy 4 <| lowNibble byte)
+            + (highNibble byte)
 
 
 {-| Resets the nth bit of the `Byte`.

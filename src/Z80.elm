@@ -322,8 +322,44 @@ executeOp op state =
                 |> resetFlag Flag.Subtract
                 |> incPC
 
-        _ ->
-            state
+        SWAP param ->
+            let
+                result =
+                    Byte.swap <| readParam param state
+            in
+                writeParam param state result
+                    |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
+                    |> setFlagsWith [ Flag.Zero => Byte.isZero result ]
+                    |> incPC
+
+        SRL param ->
+            applyWith Byte.shiftRightZf param state
+                |> uncurry setAccFlags
+                |> resetFlag Flag.Subtract
+                |> incPC
+
+        BIT bit param ->
+            let
+                isSet =
+                    Byte.getBit bit <| readParam param state
+            in
+                state
+                    |> setFlagsWith [ Flag.Zero => not isSet ]
+                    |> setFlag Flag.HalfCarry
+                    |> resetFlag Flag.Subtract
+                    |> incPC
+
+        RES bit param ->
+            readParam param state
+                |> Byte.reset bit
+                |> writeParam param state
+                |> incPC
+
+        SET bit param ->
+            readParam param state
+                |> Byte.set bit
+                |> writeParam param state
+                |> incPC
 
 
 accByteWith : (Byte -> Byte -> Byte) -> ParamData -> State -> ( Byte, State )
