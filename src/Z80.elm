@@ -316,6 +316,12 @@ executeOp op state =
                 |> resetFlag Flag.Subtract
                 |> incPC
 
+        SRA param ->
+            applyWith Byte.shiftRight param state
+                |> uncurry setAccFlags
+                |> resetFlag Flag.Subtract
+                |> incPC
+
         _ ->
             state
 
