@@ -32,6 +32,7 @@ type alias State =
     , sp : Word
     , mode : Mode
     , jump : Bool
+    , interrupts : Bool
     }
 
 
@@ -51,6 +52,7 @@ init =
     , sp = Word.fromInt 0xFFFE
     , mode = Mode.Running
     , jump = False
+    , interrupts = True
     }
 
 
@@ -394,3 +396,12 @@ getFlagByte flag state =
 updateFlags : (Byte -> Byte) -> State -> State
 updateFlags func state =
     { state | f = func state.f }
+
+
+
+-- Interrupts
+
+
+enableInterrupts : Bool -> State -> State
+enableInterrupts interrupts state =
+    { state | interrupts = interrupts }

@@ -298,6 +298,15 @@ executeOp op state =
         PREFIX_CB ->
             incPC state
 
+        RETI ->
+            enableInterrupts True <| popSP PC state
+
+        DI ->
+            incPC <| enableInterrupts False state
+
+        EI ->
+            incPC <| enableInterrupts True state
+
         _ ->
             state
 
