@@ -28,7 +28,9 @@ type alias State =
     , h : Byte
     , l : Byte
     , f : Byte
-    , pc : Word {- 16-bit registers -}
+    , pc : Word
+
+    {- 16-bit registers -}
     , sp : Word
     , mode : Mode
     , jump : Bool
@@ -118,28 +120,28 @@ writeWordRegister register state word =
                 ( high, low ) =
                     Word.toBytes word
             in
-                { state | b = high, c = low }
+            { state | b = high, c = low }
 
         HL ->
             let
                 ( high, low ) =
                     Word.toBytes word
             in
-                { state | h = high, l = low }
+            { state | h = high, l = low }
 
         DE ->
             let
                 ( high, low ) =
                     Word.toBytes word
             in
-                { state | d = high, e = low }
+            { state | d = high, e = low }
 
         AF ->
             let
                 ( high, low ) =
                     Word.toBytes word
             in
-                { state | d = high, e = low }
+            { state | d = high, e = low }
 
 
 readDataWord : State -> ( Word, State )
@@ -148,9 +150,9 @@ readDataWord state =
         newState =
             incPC state
     in
-        ( Memory.readWord newState.pc state.memory
-        , incPC newState
-        )
+    ( Memory.readWord newState.pc state.memory
+    , incPC newState
+    )
 
 
 readDataByte : State -> ( Byte, State )
@@ -159,9 +161,9 @@ readDataByte state =
         newState =
             incPC state
     in
-        ( Memory.readByte newState.pc newState.memory
-        , newState
-        )
+    ( Memory.readByte newState.pc newState.memory
+    , newState
+    )
 
 
 readMemRegister : WordRegister -> State -> Byte
@@ -180,7 +182,7 @@ readMemRegisterOffset register state =
         addr =
             wordOffset <| readByteRegister register state
     in
-        Memory.readByte addr state.memory
+    Memory.readByte addr state.memory
 
 
 readMemDataOffset : State -> ( Byte, State )
@@ -189,9 +191,9 @@ readMemDataOffset state =
         ( byte, newState ) =
             readDataByte state
     in
-        ( Memory.readByte (wordOffset byte) state.memory
-        , newState
-        )
+    ( Memory.readByte (wordOffset byte) state.memory
+    , newState
+    )
 
 
 readWordRegister : WordRegister -> State -> Word
@@ -258,10 +260,10 @@ updateClock cycles state =
                     else
                         notTaken
             in
-                { state
-                    | clock = state.clock + c
-                    , jump = False
-                }
+            { state
+                | clock = state.clock + c
+                , jump = False
+            }
 
 
 
@@ -382,7 +384,7 @@ setIncFlags result =
 setZeroFlag : Byte -> State -> State
 setZeroFlag byte =
     setFlagsWith
-        [ Flag.Zero => (Byte.isZero byte)
+        [ Flag.Zero => Byte.isZero byte
         ]
 
 

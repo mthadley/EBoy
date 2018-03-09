@@ -40,7 +40,7 @@ setWith flags byte =
             else
                 reset flag byte
     in
-        List.foldr setOrReset byte flags
+    List.foldr setOrReset byte flags
 
 
 {-| Resets the `Flag`s in the `Byte`.

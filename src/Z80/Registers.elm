@@ -18,7 +18,7 @@ type ByteRegister
 
 
 {-| A type respresenting the possible 16-bit registers. Only `PC`
-and `SP` are *true* 16-bit registers, the rest are pairs of 8-bit
+and `SP` are _true_ 16-bit registers, the rest are pairs of 8-bit
 registers.
 -}
 type WordRegister

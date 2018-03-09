@@ -2,14 +2,14 @@ module Main exposing (..)
 
 import Byte exposing (Byte)
 import Html exposing (..)
-import Html.Events exposing (onClick)
 import Html.Attributes as Attr
+import Html.Events exposing (onClick)
+import Time
 import Word exposing (Word)
 import Z80
-import Z80.State as State exposing (State)
 import Z80.Decode exposing (decode)
 import Z80.Registers exposing (..)
-import Time
+import Z80.State as State exposing (State)
 
 
 -- Model
@@ -134,7 +134,7 @@ intToHex pad int =
             else
                 helper (int // 16) <| (digitToHex <| int % 16) ++ str
     in
-        helper int ""
+    helper int ""
 
 
 digitToHex : Int -> String

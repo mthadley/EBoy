@@ -18,8 +18,8 @@ module Word
         )
 
 import Bitwise
-import Carry exposing (Carry)
 import Byte exposing (Byte)
+import Carry exposing (Carry)
 
 
 {-| Opaque type representing a 16-bit word.
@@ -38,6 +38,7 @@ isZero =
 {-| Converts an `Int` to a `Word`.
 
     fromInt 1200 : Word
+
 -}
 fromInt : Int -> Word
 fromInt =
@@ -95,12 +96,12 @@ addc (Word a) (Word b) =
             a + b
 
         halfCarry =
-            Bitwise.and ((maskLower a) + (maskLower b)) 0x1000 > 0
+            Bitwise.and (maskLower a + maskLower b) 0x1000 > 0
     in
-        Carry.create
-            (fromInt sum)
-            (sum > 0xFFFF)
-            (halfCarry)
+    Carry.create
+        (fromInt sum)
+        (sum > 0xFFFF)
+        halfCarry
 
 
 {-| Subtracts the second `Word` from the first.

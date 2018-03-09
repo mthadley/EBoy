@@ -48,4 +48,4 @@ writeTarget target ( byte, state ) =
                 ( addr, newState ) =
                     readDataWord state
             in
-                writeMemByte addr byte newState
+            writeMemByte addr byte newState

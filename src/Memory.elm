@@ -64,9 +64,9 @@ writeWord addr val memory =
         ( high, low ) =
             Word.toBytes val
     in
-        memory
-            |> writeByte addr low
-            |> writeByte (Word.inc addr) high
+    memory
+        |> writeByte addr low
+        |> writeByte (Word.inc addr) high
 
 
 get : Array a -> Int -> Maybe a

@@ -800,7 +800,7 @@ decodeCB byte =
         b =
             Byte.toInt byte
     in
-        decodeCBWith (decodeCBOp b) b
+    decodeCBWith (decodeCBOp b) b
 
 
 decodeCBOp : Int -> (Param -> Op)
@@ -910,7 +910,7 @@ decodeCBWith : (Param -> Op) -> Int -> ( Op, Cycles )
 decodeCBWith op code =
     let
         ( param, cycles ) =
-            case (Bitwise.and code 0x0F) % 8 of
+            case Bitwise.and code 0x0F % 8 of
                 0 ->
                     ( OnRegister B, 8 )
 
@@ -935,7 +935,7 @@ decodeCBWith op code =
                 _ ->
                     ( OnRegister A, 8 )
     in
-        op param @ cycles
+    op param @ cycles
 
 
 {-| Returns `True` if the operation is the `PREFIX_CB`.

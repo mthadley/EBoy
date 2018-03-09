@@ -42,13 +42,13 @@ readSource source state =
                         (readWordRegister SP state)
                         (Word.fromByte byte)
             in
-                ( Carry.value result
-                , setFlagsWith
-                    [ Flag.Carry => Carry.check result
-                    , Flag.HalfCarry => Carry.checkHalf result
-                    ]
-                    state
-                )
+            ( Carry.value result
+            , setFlagsWith
+                [ Flag.Carry => Carry.check result
+                , Flag.HalfCarry => Carry.checkHalf result
+                ]
+                state
+            )
 
 
 writeTarget : Target -> ( Word, State ) -> State
@@ -62,4 +62,4 @@ writeTarget target ( word, state ) =
                 ( addr, newState ) =
                     readDataWord state
             in
-                writeMemWord addr word newState
+            writeMemWord addr word newState

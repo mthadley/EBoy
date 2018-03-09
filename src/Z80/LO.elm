@@ -1,7 +1,7 @@
 module Z80.LO exposing (..)
 
-import Z80.Registers exposing (..)
 import Byte exposing (Byte)
+import Z80.Registers exposing (..)
 import Z80.State exposing (..)
 
 
@@ -45,11 +45,11 @@ writeTarget target ( byte, state ) =
                 ( word, newState ) =
                     Tuple.mapFirst wordOffset <| readDataByte state
             in
-                writeMemByte word byte newState
+            writeMemByte word byte newState
 
         IntoMemCOffset ->
             let
                 addr =
                     wordOffset <| readByteRegister C state
             in
-                writeMemByte addr byte state
+            writeMemByte addr byte state

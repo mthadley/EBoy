@@ -52,6 +52,7 @@ isZero =
 {-| Converts an `Int` to a `Byte`.
 
     fromInt 3 : Byte
+
 -}
 fromInt : Int -> Byte
 fromInt =
@@ -63,6 +64,7 @@ fromInt =
     (fromInt 3 |> toInt) == 3
 
 Guaranteed to be in the range: `10 <= n < 2^8`
+
 -}
 toInt : Byte -> Int
 toInt (Byte b) =
@@ -105,10 +107,10 @@ addc (Byte x) (Byte y) =
         sum =
             x + y
     in
-        Carry.create
-            (fromInt sum)
-            (sum > 255)
-            (Bitwise.and ((maskLower x) + (maskLower y)) 0x10 > 0)
+    Carry.create
+        (fromInt sum)
+        (sum > 255)
+        (Bitwise.and (maskLower x + maskLower y) 0x10 > 0)
 
 
 {-| Bitwise complement (Flips each bit).
@@ -126,14 +128,13 @@ sub a b =
 
 
 {-| Subtracts the second `Byte` from the first, returning a carry.
-
 -}
 subc : Byte -> Byte -> Carry Byte
 subc (Byte x) (Byte y) =
     Carry.create
         (fromInt <| x - y)
         (x < y)
-        ((maskHigher x) < (maskHigher y))
+        (maskHigher x < maskHigher y)
 
 
 {-| Increment a Byte.
@@ -180,7 +181,7 @@ lsbSet =
     getBit 0
 
 
-{-| Returns a  `Bool` indicating whether or not the bit is set.
+{-| Returns a `Bool` indicating whether or not the bit is set.
 -}
 getBit : Int -> Byte -> Bool
 getBit n (Byte b) =
@@ -231,7 +232,7 @@ swap : Byte -> Byte
 swap byte =
     Byte <|
         (Bitwise.shiftLeftBy 4 <| lowNibble byte)
-            + (highNibble byte)
+            + highNibble byte
 
 
 {-| Resets the nth bit of the `Byte`.
@@ -275,7 +276,7 @@ shiftRight ((Byte b) as byte) =
                 |> Byte
                 |> setWith 7 (msbSet byte)
     in
-        Carry.create result (lsbSet byte) False
+    Carry.create result (lsbSet byte) False
 
 
 {-| Shifts `Byte` right, filling with zeroes.
@@ -304,10 +305,10 @@ rotate rotation (Byte b) =
                 Right ->
                     ( 7, 1 )
     in
-        fromInt <|
-            Bitwise.or
-                (mask <| Bitwise.shiftLeftBy leftTimes b)
-                (Bitwise.shiftRightZfBy rightTimes b)
+    fromInt <|
+        Bitwise.or
+            (mask <| Bitwise.shiftLeftBy leftTimes b)
+            (Bitwise.shiftRightZfBy rightTimes b)
 
 
 mask : Int -> Int

@@ -3,11 +3,11 @@ module Z80.Op exposing (..)
 {-| Types of Z80 operations.
 -}
 
+import Z80.Flag exposing (Flag)
 import Z80.LB as LB
 import Z80.LO as LO
 import Z80.LW as LW
 import Z80.Registers exposing (..)
-import Z80.Flag exposing (Flag)
 
 
 {-| Jump Targets
@@ -44,11 +44,12 @@ type FlagCondition
 of the Z80. There are a few extra "synthetic" instructions added to make
 it easier to work with 16-bit (Word) operatoins. These include:
 
-* `ADDW`
-* `INCW`
-* `LDW`
-* `DECW`
-* `ADDSP`
+  - `ADDW`
+  - `INCW`
+  - `LDW`
+  - `DECW`
+  - `ADDSP`
+
 -}
 type Op
     = INVALID Int

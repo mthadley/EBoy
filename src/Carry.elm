@@ -1,10 +1,10 @@
 module Carry
     exposing
         ( Carry
-        , create
-        , value
         , check
         , checkHalf
+        , create
+        , value
         , withoutOp
         )
 
