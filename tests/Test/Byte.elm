@@ -1,13 +1,13 @@
-module ByteTests exposing (tests)
+module Test.Byte exposing (..)
 
 import Byte
-import Test exposing (..)
 import Expect
 import Fuzz exposing (int)
+import Test exposing (..)
 
 
-tests : Test
-tests =
+suite : Test
+suite =
     describe "Byte"
         [ fuzz int "should always be in the range 0 <= x < 256" <|
             \fuzzInt ->

@@ -1,13 +1,13 @@
-module WordTests exposing (tests)
+module Test.Word exposing (..)
 
-import Word
-import Test exposing (..)
 import Expect
 import Fuzz exposing (int)
+import Test exposing (..)
+import Word
 
 
-tests : Test
-tests =
+suite : Test
+suite =
     describe "Word"
         [ fuzz int "should always be in the range 0 <= x < 65536" <|
             \fuzzInt ->
