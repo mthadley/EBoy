@@ -42,7 +42,7 @@ initFromInts ints =
     let
         rest =
             Array.repeat
-                (min (List.length ints) memSize)
+                (memSize - List.length ints)
                 (Byte.fromInt 0)
     in
     ints
