@@ -2,6 +2,7 @@ module Memory
     exposing
         ( Memory
         , init
+        , initFromInts
         , readByte
         , readWord
         , writeByte
@@ -20,11 +21,36 @@ type Memory
     = Memory (Array Byte)
 
 
+{-| Numer of memory locations
+-}
+memSize : Int
+memSize =
+    65536
+
+
 {-| Initializes zero-filled memory.
 -}
 init : Memory
 init =
-    Memory <| Array.repeat 65536 <| Byte.fromInt 0
+    Memory <| Array.repeat memSize <| Byte.fromInt 0
+
+
+{-| Initializes memory from a list of Int. Useful for testing.
+-}
+initFromInts : List Int -> Memory
+initFromInts ints =
+    let
+        rest =
+            Array.repeat
+                (min (List.length ints) memSize)
+                (Byte.fromInt 0)
+    in
+    ints
+        |> List.take memSize
+        |> List.map Byte.fromInt
+        |> Array.fromList
+        |> flip Array.append rest
+        |> Memory
 
 
 {-| Reads a `Byte` from memory. Takes a `Word` indicating
