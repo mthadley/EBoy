@@ -6,10 +6,12 @@ import Test.Util
         ( Unit
         , expectByte
         , expectMem
+        , expectMemWord
         , expectWord
         , toTest
         , withByte
         , withCode
+        , withMem
         , withWord
         )
 import Z80.Registers exposing (..)
@@ -50,6 +52,19 @@ states =
         |> expectByte B 255
     , withCode [ 0x06, 0x23 ]
         |> expectByte B 0x23
+    , withCode [ 0x07, 0x23 ]
+        |> withByte A 0x04
+        |> expectByte A 0x08
+    , withCode [ 0x08, 0x22, 0x44 ]
+        |> withWord SP 0x8888
+        |> expectMemWord 0x4422 0x8888
+    , withCode [ 0x09 ]
+        |> withWord HL 0x0202
+        |> expectWord BC 0x0202
+    , withCode [ 0x0A ]
+        |> withWord BC 0x08
+        |> withMem 0x08 0x32
+        |> expectByte A 0x32
     ]
 
 

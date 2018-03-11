@@ -108,6 +108,10 @@ writeByteRegister register state byte =
 
 writeWordRegister : WordRegister -> State -> Word -> State
 writeWordRegister register state word =
+    let
+        ( high, low ) =
+            Word.toBytes word
+    in
     case register of
         PC ->
             { state | pc = word }
@@ -116,31 +120,15 @@ writeWordRegister register state word =
             { state | sp = word }
 
         BC ->
-            let
-                ( high, low ) =
-                    Word.toBytes word
-            in
             { state | b = high, c = low }
 
         HL ->
-            let
-                ( high, low ) =
-                    Word.toBytes word
-            in
             { state | h = high, l = low }
 
         DE ->
-            let
-                ( high, low ) =
-                    Word.toBytes word
-            in
             { state | d = high, e = low }
 
         AF ->
-            let
-                ( high, low ) =
-                    Word.toBytes word
-            in
             { state | d = high, e = low }
 
 

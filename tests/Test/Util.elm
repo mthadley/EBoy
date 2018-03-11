@@ -4,10 +4,12 @@ module Test.Util
         , Unit
         , expectByte
         , expectMem
+        , expectMemWord
         , expectWord
         , toTest
         , withByte
         , withCode
+        , withMem
         , withWord
         )
 
@@ -21,6 +23,7 @@ import Z80.Registers exposing (..)
 import Z80.State as State
     exposing
         ( State
+        , init
         , readByteRegister
         , readWordRegister
         , writeByteRegister
@@ -41,11 +44,19 @@ type ExpectState
     | ExpectByteRegister ByteRegister Int
     | ExpectWordRegister WordRegister Int
     | ExpectMem Int Int
+    | ExpectMemWord Int Int
 
 
 withCode : List Int -> Unit
-withCode =
-    Unit None State.init
+withCode codes =
+    let
+        state =
+            { init | memory = Memory.initFromInts codes }
+    in
+    { expectState = None
+    , state = state
+    , codes = codes
+    }
 
 
 and : ExpectState -> Unit -> Unit
@@ -59,23 +70,38 @@ and expectState unit =
     }
 
 
+withMem : Int -> Int -> Unit -> Unit
+withMem loc val ({ state } as unit) =
+    let
+        newState =
+            { state
+                | memory =
+                    Memory.writeByte
+                        (Word.fromInt loc)
+                        (Byte.fromInt val)
+                        state.memory
+            }
+    in
+    { unit | state = newState }
+
+
 withByte : ByteRegister -> Int -> Unit -> Unit
-withByte register int unit =
+withByte register val unit =
     { unit
         | state =
             writeByteRegister register
                 unit.state
-                (Byte.fromInt int)
+                (Byte.fromInt val)
     }
 
 
 withWord : WordRegister -> Int -> Unit -> Unit
-withWord register int unit =
+withWord register val unit =
     { unit
         | state =
             writeWordRegister register
                 unit.state
-                (Word.fromInt int)
+                (Word.fromInt val)
     }
 
 
@@ -87,6 +113,11 @@ expectByte reg =
 expectMem : Int -> Int -> Unit -> Unit
 expectMem loc =
     and << ExpectMem loc
+
+
+expectMemWord : Int -> Int -> Unit -> Unit
+expectMemWord loc =
+    and << ExpectMemWord loc
 
 
 expectWord : WordRegister -> Int -> Unit -> Unit
@@ -106,44 +137,59 @@ toExpectation expectState state =
                 |> flip Expect.all state
 
         ExpectByteRegister register val ->
-            readByteRegister register state
-                |> Byte.toInt
+            let
+                actual =
+                    readByteRegister register state
+                        |> Byte.toInt
+            in
+            actual
                 |> Expect.equal val
-                |> registerFailure register val
+                |> onFail register val actual
+
+        ExpectMemWord loc val ->
+            let
+                actual =
+                    Memory.readWord (Word.fromInt loc) state.memory
+                        |> Word.toInt
+            in
+            actual
+                |> Expect.equal val
+                |> onFail loc val actual
 
         ExpectMem loc val ->
-            Memory.readWord (Word.fromInt loc) state.memory
-                |> Word.toInt
+            let
+                actual =
+                    Memory.readByte (Word.fromInt loc) state.memory
+                        |> Byte.toInt
+            in
+            actual
                 |> Expect.equal val
-                |> Expect.onFail
-                    ("Memory location "
-                        ++ toString loc
-                        ++ " should be "
-                        ++ toString val
-                    )
+                |> onFail loc val actual
 
         ExpectWordRegister register val ->
-            readWordRegister register state
-                |> Word.toInt
+            let
+                actual =
+                    readWordRegister register state
+                        |> Word.toInt
+            in
+            actual
                 |> Expect.equal val
-                |> registerFailure register val
+                |> onFail register val actual
 
 
-registerFailure : a -> Int -> Expectation -> Expectation
-registerFailure register int =
+onFail : a -> b -> c -> Expectation -> Expectation
+onFail loc val actual =
     Expect.onFail <|
-        "Register "
-            ++ toString register
+        "Location "
+            ++ toString loc
             ++ " should be "
-            ++ toString int
+            ++ toString val
+            ++ " but was "
+            ++ toString actual
 
 
 toTest : Unit -> Test
 toTest { codes, expectState, state } =
-    let
-        initState =
-            { state | memory = initFromInts codes }
-    in
-    (toExpectation expectState <| next initState)
+    (toExpectation expectState <| next state)
         |> always
         |> test ("Should match expected state: " ++ toString codes)
