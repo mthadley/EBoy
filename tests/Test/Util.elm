@@ -3,8 +3,10 @@ module Test.Util
         ( ExpectState
         , Unit
         , expectByte
+        , expectFlags
         , expectMem
         , expectMemWord
+        , expectMode
         , expectWord
         , toTest
         , withByte
@@ -13,12 +15,14 @@ module Test.Util
         , withWord
         )
 
-import Byte
+import Byte exposing (Byte)
 import Expect exposing (Expectation)
 import Memory exposing (initFromInts)
 import Test exposing (Test, test)
 import Word
 import Z80 exposing (next)
+import Z80.Flag as Flag exposing (Flag)
+import Z80.Mode exposing (Mode)
 import Z80.Registers exposing (..)
 import Z80.State as State
     exposing
@@ -45,6 +49,8 @@ type ExpectState
     | ExpectWordRegister WordRegister Int
     | ExpectMem Int Int
     | ExpectMemWord Int Int
+    | ExpectMode Mode
+    | ExpectFlags (List ( Flag, Bool ))
 
 
 withCode : List Int -> Unit
@@ -105,6 +111,11 @@ withWord register val unit =
     }
 
 
+expectFlags : List ( Flag, Bool ) -> Unit -> Unit
+expectFlags =
+    and << ExpectFlags
+
+
 expectByte : ByteRegister -> Int -> Unit -> Unit
 expectByte reg =
     and << ExpectByteRegister reg
@@ -113,6 +124,11 @@ expectByte reg =
 expectMem : Int -> Int -> Unit -> Unit
 expectMem loc =
     and << ExpectMem loc
+
+
+expectMode : Mode -> Unit -> Unit
+expectMode =
+    and << ExpectMode
 
 
 expectMemWord : Int -> Int -> Unit -> Unit
@@ -135,6 +151,14 @@ toExpectation expectState state =
             expects
                 |> List.map toExpectation
                 |> flip Expect.all state
+
+        ExpectMode mode ->
+            Expect.equal mode <| state.mode
+
+        ExpectFlags pairs ->
+            pairs
+                |> List.map (uncurry flagToExpectation)
+                |> flip Expect.all state.f
 
         ExpectByteRegister register val ->
             let
@@ -175,6 +199,18 @@ toExpectation expectState state =
             actual
                 |> Expect.equal val
                 |> onFail register val actual
+
+
+flagToExpectation : Flag -> Bool -> Byte -> Expectation
+flagToExpectation flag value =
+    Flag.isSet flag
+        >> Expect.equal value
+        >> Expect.onFail
+            ("Flag "
+                ++ toString flag
+                ++ " should be "
+                ++ toString value
+            )
 
 
 onFail : a -> b -> c -> Expectation -> Expectation

@@ -1,24 +1,15 @@
 module Test.Z80 exposing (..)
 
+import Basics.Extra exposing ((=>))
 import Test exposing (..)
-import Test.Util
-    exposing
-        ( Unit
-        , expectByte
-        , expectMem
-        , expectMemWord
-        , expectWord
-        , toTest
-        , withByte
-        , withCode
-        , withMem
-        , withWord
-        )
+import Test.Util exposing (..)
+import Z80.Flag exposing (Flag(..))
+import Z80.Mode as Mode
 import Z80.Registers exposing (..)
 
 
-states : List Unit
-states =
+tests : List Unit
+tests =
     [ withCode [ 0x00 ]
         |> expectByte A 0
         |> expectByte B 0
@@ -65,11 +56,28 @@ states =
         |> withWord BC 0x08
         |> withMem 0x08 0x32
         |> expectByte A 0x32
+    , withCode [ 0x0B ]
+        |> withWord BC 0x06
+        |> expectWord BC 0x05
+    , withCode [ 0x0C ]
+        |> withByte C 0x22
+        |> expectByte C 0x23
+    , withCode [ 0x0D ]
+        |> withByte C 0x22
+        |> expectByte C 0x21
+    , withCode [ 0x0E, 0x24 ]
+        |> expectByte C 0x24
+    , withCode [ 0x0F ]
+        |> withByte A 0x11
+        |> expectByte A 0x88
+        |> expectFlags [ Carry => True ]
+    , withCode [ 0x10 ]
+        |> expectMode Mode.Stopped
     ]
 
 
 suite : Test
 suite =
-    states
+    tests
         |> List.map toTest
         |> describe "Z80 op codes"
