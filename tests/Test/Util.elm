@@ -8,6 +8,8 @@ module Test.Util
         , expectMemWord
         , expectMode
         , expectWord
+        , runTest
+        , toExpectation
         , toTest
         , withByte
         , withCode
@@ -224,8 +226,13 @@ onFail loc val actual =
             ++ toString actual
 
 
-toTest : Unit -> Test
-toTest { codes, expectState, state } =
+runTest : Unit -> () -> Expectation
+runTest { codes, expectState, state } =
     (toExpectation expectState <| next state)
         |> always
-        |> test ("Should match expected state: " ++ toString codes)
+
+
+toTest : Unit -> Test
+toTest unit =
+    runTest unit
+        |> test ("Should match expected state: " ++ toString unit.codes)

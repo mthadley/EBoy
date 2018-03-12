@@ -9,11 +9,21 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Byte"
-        [ fuzz int "should always be in the range 0 <= x < 256" <|
-            \fuzzInt ->
-                (Byte.toInt <| Byte.fromInt fuzzInt)
-                    |> Expect.all
-                        [ Expect.atLeast 0
-                        , Expect.lessThan 256
-                        ]
+        [ describe "fromInt"
+            [ fuzz int "should always be in the range 0 <= x < 256" <|
+                \fuzzInt ->
+                    (Byte.toInt <| Byte.fromInt fuzzInt)
+                        |> Expect.all
+                            [ Expect.atLeast 0
+                            , Expect.lessThan 256
+                            ]
+            ]
+        , describe "rotateRight"
+            [ test "should rotate right" <|
+                \_ ->
+                    Byte.fromInt 0x01
+                        |> Byte.rotateRight
+                        |> Byte.toInt
+                        |> Expect.equal 0x80
+            ]
         ]
