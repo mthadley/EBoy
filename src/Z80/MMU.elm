@@ -180,9 +180,8 @@ type Region
     | InterruptEnable
 
 
-{-| Determine the region of memory that pertains to the
-address. Returns the region, and an appropriately adjusted
-address if appropriate.
+{-| Determine the Region that is associated to the
+address.
 -}
 memoryRegion : Word -> Region
 memoryRegion word =
