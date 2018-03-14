@@ -19,11 +19,11 @@ module Test.Util
 
 import Byte exposing (Byte)
 import Expect exposing (Expectation)
-import Memory exposing (initFromInts)
 import Test exposing (Test, test)
 import Word
 import Z80 exposing (next)
 import Z80.Flag as Flag exposing (Flag)
+import Z80.MMU as MMU
 import Z80.Mode exposing (Mode)
 import Z80.Registers exposing (..)
 import Z80.State as State
@@ -58,11 +58,13 @@ type ExpectState
 withCode : List Int -> Unit
 withCode codes =
     let
-        state =
-            { init | memory = Memory.initFromInts codes }
+        mmu =
+            codes
+                |> List.map Byte.fromInt
+                |> flip MMU.loadRom MMU.init
     in
     { expectState = None
-    , state = state
+    , state = { init | mmu = mmu }
     , codes = codes
     }
 
@@ -83,11 +85,11 @@ withMem loc val ({ state } as unit) =
     let
         newState =
             { state
-                | memory =
-                    Memory.writeByte
+                | mmu =
+                    MMU.writeByte
                         (Word.fromInt loc)
                         (Byte.fromInt val)
-                        state.memory
+                        state.mmu
             }
     in
     { unit | state = newState }
@@ -175,7 +177,7 @@ toExpectation expectState state =
         ExpectMemWord loc val ->
             let
                 actual =
-                    Memory.readWord (Word.fromInt loc) state.memory
+                    MMU.readWord (Word.fromInt loc) state.mmu
                         |> Word.toInt
             in
             actual
@@ -185,7 +187,7 @@ toExpectation expectState state =
         ExpectMem loc val ->
             let
                 actual =
-                    Memory.readByte (Word.fromInt loc) state.memory
+                    MMU.readByte (Word.fromInt loc) state.mmu
                         |> Byte.toInt
             in
             actual

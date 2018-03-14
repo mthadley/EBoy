@@ -3,7 +3,6 @@ module Z80 exposing (next)
 import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
-import Memory exposing (Memory)
 import Util
 import Word exposing (Word)
 import Z80.Cycles exposing (Cycles)
@@ -12,6 +11,7 @@ import Z80.Flag as Flag exposing (Flag)
 import Z80.LB as LB
 import Z80.LO as LO
 import Z80.LW as LW
+import Z80.MMU as MMU
 import Z80.Mode as Mode
 import Z80.Op exposing (..)
 import Z80.Registers exposing (..)
@@ -25,7 +25,7 @@ next =
 
 fetch : State -> ( Byte, State )
 fetch state =
-    ( Memory.readByte state.pc state.memory
+    ( MMU.readByte state.pc state.mmu
     , state
     )
 

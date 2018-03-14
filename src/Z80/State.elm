@@ -6,11 +6,11 @@ module Z80.State exposing (..)
 import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
-import Memory exposing (Memory)
 import Util
 import Word exposing (Word)
 import Z80.Cycles exposing (Cycles(..))
 import Z80.Flag as Flag exposing (Flag)
+import Z80.MMU as MMU exposing (MMU)
 import Z80.Mode as Mode exposing (Mode)
 import Z80.Registers exposing (..)
 
@@ -19,7 +19,7 @@ import Z80.Registers exposing (..)
 -}
 type alias State =
     { clock : Int
-    , memory : Memory
+    , mmu : MMU
     , a : Byte
     , b : Byte
     , c : Byte
@@ -41,7 +41,7 @@ type alias State =
 init : State
 init =
     { clock = 0
-    , memory = Memory.init
+    , mmu = MMU.init
     , a = Byte.fromInt 0
     , b = Byte.fromInt 0
     , c = Byte.fromInt 0
@@ -60,12 +60,12 @@ init =
 
 writeMemByte : Word -> Byte -> State -> State
 writeMemByte addr byte state =
-    { state | memory = Memory.writeByte addr byte state.memory }
+    { state | mmu = MMU.writeByte addr byte state.mmu }
 
 
 writeMemWord : Word -> Word -> State -> State
 writeMemWord addr word state =
-    { state | memory = Memory.writeWord addr word state.memory }
+    { state | mmu = MMU.writeWord addr word state.mmu }
 
 
 writeMemRegister : WordRegister -> State -> Byte -> State
@@ -138,7 +138,7 @@ readDataWord state =
         newState =
             incPC state
     in
-    ( Memory.readWord newState.pc state.memory
+    ( MMU.readWord newState.pc state.mmu
     , incPC newState
     )
 
@@ -149,19 +149,19 @@ readDataByte state =
         newState =
             incPC state
     in
-    ( Memory.readByte newState.pc newState.memory
+    ( MMU.readByte newState.pc newState.mmu
     , newState
     )
 
 
 readMemRegister : WordRegister -> State -> Byte
 readMemRegister wordRegister state =
-    Memory.readByte (readWordRegister wordRegister state) state.memory
+    MMU.readByte (readWordRegister wordRegister state) state.mmu
 
 
 readMemWordRegister : WordRegister -> State -> Word
 readMemWordRegister register state =
-    Memory.readWord state.sp state.memory
+    MMU.readWord state.sp state.mmu
 
 
 readMemRegisterOffset : ByteRegister -> State -> Byte
@@ -170,7 +170,7 @@ readMemRegisterOffset register state =
         addr =
             wordOffset <| readByteRegister register state
     in
-    Memory.readByte addr state.memory
+    MMU.readByte addr state.mmu
 
 
 readMemDataOffset : State -> ( Byte, State )
@@ -179,7 +179,7 @@ readMemDataOffset state =
         ( byte, newState ) =
             readDataByte state
     in
-    ( Memory.readByte (wordOffset byte) state.memory
+    ( MMU.readByte (wordOffset byte) state.mmu
     , newState
     )
 

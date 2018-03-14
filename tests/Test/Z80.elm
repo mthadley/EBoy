@@ -8,6 +8,8 @@ import Z80.Mode as Mode
 import Z80.Registers exposing (..)
 
 
+{-| Note: Work RAM starts at 0xC000
+-}
 tests : List Unit
 tests =
     [ withCode [ 0x00 ]
@@ -31,8 +33,8 @@ tests =
         |> expectWord BC 0x0201
     , withCode [ 0x02 ]
         |> withByte A 0x23
-        |> withWord BC 0x10
-        |> expectMem 0x10 0x23
+        |> withWord BC 0xC042
+        |> expectMem 0xC042 0x23
     , withCode [ 0x03 ]
         |> expectByte B 0
         |> expectByte C 1
@@ -47,16 +49,16 @@ tests =
     , withCode [ 0x07, 0x23 ]
         |> withByte A 0x04
         |> expectByte A 0x08
-    , withCode [ 0x08, 0x22, 0x44 ]
+    , withCode [ 0x08, 0x22, 0xC0 ]
         |> withWord SP 0x8888
         |> expectWord PC 0x03
-        |> expectMemWord 0x4422 0x8888
+        |> expectMemWord 0xC022 0x8888
     , withCode [ 0x09 ]
         |> withWord HL 0x0202
         |> expectWord BC 0x0202
     , withCode [ 0x0A ]
-        |> withWord BC 0x08
-        |> withMem 0x08 0x32
+        |> withWord BC 0xD001
+        |> withMem 0xD001 0x32
         |> expectByte A 0x32
     , withCode [ 0x0B ]
         |> withWord BC 0x06
@@ -79,9 +81,9 @@ tests =
         |> withWord DE 0x1111
         |> expectWord DE 0x2244
     , withCode [ 0x12 ]
-        |> withWord DE 0x1234
+        |> withWord DE 0xCFEE
         |> withByte A 0x23
-        |> expectMem 0x1234 0x23
+        |> expectMem 0xCFEE 0x23
     , withCode [ 0x13 ]
         |> withWord DE 0x1111
         |> expectWord DE 0x1112
