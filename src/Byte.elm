@@ -23,6 +23,7 @@ module Byte
         , set
         , setWith
         , shiftLeft
+        , shiftLeftBy
         , shiftRight
         , shiftRightZf
         , sub
@@ -30,6 +31,7 @@ module Byte
         , swap
         , toInt
         , xor
+        , zero
         )
 
 import Bitwise
@@ -40,6 +42,13 @@ import Carry exposing (Carry)
 -}
 type Byte
     = Byte Int
+
+
+{-| A `Byte` of zero.
+-}
+zero : Byte
+zero =
+    fromInt 0
 
 
 {-| Returns `True` if the `Byte` is zero.
@@ -255,12 +264,19 @@ setWith n shouldSet byte =
         reset n byte
 
 
-{-| Shifts Byte left.
+{-| Shifts `Byte` left.
 -}
 shiftLeft : Byte -> Carry Byte
-shiftLeft ((Byte b) as byte) =
+shiftLeft =
+    shiftLeftBy 1
+
+
+{-| Shifts Byte left n times.
+-}
+shiftLeftBy : Int -> Byte -> Carry Byte
+shiftLeftBy times ((Byte b) as byte) =
     Carry.create
-        (fromInt <| Bitwise.shiftLeftBy 1 b)
+        (fromInt <| Bitwise.shiftLeftBy times b)
         (msbSet byte)
         False
 

@@ -2,6 +2,7 @@ module Test.Util
     exposing
         ( ExpectState
         , Unit
+        , byte
         , expectByte
         , expectFlags
         , expectMem
@@ -19,6 +20,7 @@ module Test.Util
 
 import Byte exposing (Byte)
 import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer)
 import Test exposing (Test, test)
 import Word
 import Z80 exposing (next)
@@ -238,3 +240,8 @@ toTest : Unit -> Test
 toTest unit =
     runTest unit
         |> test ("Should match expected state: " ++ toString unit.codes)
+
+
+byte : Fuzzer Byte
+byte =
+    Fuzz.map Byte.fromInt Fuzz.int
