@@ -8,6 +8,7 @@ module Test.Util
         , expectMem
         , expectMemWord
         , expectMode
+        , expectOk
         , expectWord
         , runTest
         , toExpectation
@@ -63,7 +64,8 @@ withCode codes =
         mmu =
             codes
                 |> List.map Byte.fromInt
-                |> flip MMU.loadRom MMU.init
+                |> flip MMU.loadROM MMU.init
+                |> Result.withDefault MMU.init
     in
     { expectState = None
     , state = { init | mmu = mmu }
@@ -245,3 +247,13 @@ toTest unit =
 byte : Fuzzer Byte
 byte =
     Fuzz.map Byte.fromInt Fuzz.int
+
+
+expectOk : Result a b -> Expectation
+expectOk result =
+    case result of
+        Ok _ ->
+            Expect.pass
+
+        Err _ ->
+            Expect.fail "Recieved an Err"

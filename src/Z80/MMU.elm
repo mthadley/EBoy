@@ -5,7 +5,7 @@ module Z80.MMU
         , ROMType(..)
         , ROMWrite(..)
         , init
-        , loadRom
+        , loadROM
         , ramEnableVal
         , readByte
         , readWord
@@ -52,16 +52,25 @@ init =
 
 {-| Loads a list of bytes into ROM.
 -}
-loadRom : List Byte -> MMU -> MMU
-loadRom codes mmu =
+loadROM : List Byte -> MMU -> Result LoadError MMU
+loadROM codes mmu =
     let
         rom =
             Memory.initFromCodes codes romSize
+
+        updateROM romType =
+            { mmu
+                | rom = rom
+                , romType = romType
+            }
     in
-    { mmu
-        | rom = rom
-        , romType = readROMType rom
-    }
+    Result.map updateROM <| readROMType rom
+
+
+{-| Error type representing failures to load a ROM.
+-}
+type LoadError
+    = UnsupportedROMType
 
 
 {-| Reads a `Byte` from the MMU. Takes a `Word` which is
@@ -264,41 +273,44 @@ type Mode
 
 {-| Takes a `MMU` and returns the current `ROMType`.
 -}
-readROMType : Memory -> ROMType
+readROMType : Memory -> Result LoadError ROMType
 readROMType memory =
     case Byte.toInt <| Memory.readByte romTypeAddr memory of
+        0x00 ->
+            Ok ROMOnly
+
         0x01 ->
-            MBC1 ROMBankMode
+            Ok <| MBC1 ROMBankMode
 
         0x02 ->
-            MBC1 ROMBankMode
+            Ok <| MBC1 ROMBankMode
 
         0x03 ->
-            MBC1 ROMBankMode
+            Ok <| MBC1 ROMBankMode
 
         0x05 ->
-            MBC2
+            Ok MBC2
 
         0x06 ->
-            MBC2
+            Ok MBC2
 
         0x0F ->
-            MBC3
+            Ok MBC3
 
         0x10 ->
-            MBC3
+            Ok MBC3
 
         0x11 ->
-            MBC3
+            Ok MBC3
 
         0x12 ->
-            MBC3
+            Ok MBC3
 
         0x13 ->
-            MBC3
+            Ok MBC3
 
         _ ->
-            ROMOnly
+            Err UnsupportedROMType
 
 
 {-| Represents the logical regions of the MMU.

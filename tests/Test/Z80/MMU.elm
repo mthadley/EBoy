@@ -4,7 +4,7 @@ import Byte exposing (Byte)
 import Expect
 import Fuzz exposing (Fuzzer, int)
 import Test exposing (Test, describe, fuzz, test)
-import Test.Util exposing (byte)
+import Test.Util exposing (byte, expectOk)
 import Word
 import Z80.MMU as MMU exposing (MMU)
 
@@ -25,23 +25,33 @@ suite =
                         |> readByte 0xE001
                         |> Expect.equal val
             ]
-        , describe "loadRom"
-            [ fuzz byte "Should read a byte from a loaded ROM" <|
+        , describe "loadROM"
+            [ test "Should successfully load a ROM" <|
+                \_ ->
+                    MMU.init
+                        |> MMU.loadROM mbc1ROM
+                        |> expectOk
+            , test "Should fail to load an unsupported ROM" <|
+                \_ ->
+                    MMU.init
+                        |> MMU.loadROM invalidROM
+                        |> Expect.err
+            , fuzz byte "Should read a byte from a loaded ROM" <|
                 \val ->
                     MMU.init
-                        |> MMU.loadRom [ val ]
+                        |> loadROM [ val ]
                         |> readByte 0x00
                         |> Expect.equal val
             , test "Should read the correct rom type: ROM Only" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom [ Byte.fromInt 0x00 ]
+                        |> loadROM [ Byte.fromInt 0x00 ]
                         |> .romType
                         |> Expect.equal MMU.ROMOnly
             , test "Should read the correct rom type: MBC1" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> .romType
                         |> Expect.equal (MMU.MBC1 MMU.ROMBankMode)
             ]
@@ -49,35 +59,35 @@ suite =
             [ fuzz byte "ERAM should start disabled" <|
                 \val ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0xA001 val
                         |> readByte 0xA001
                         |> Expect.equal (Byte.fromInt 0)
             , test "Should select ROM bank 1 by writing a 0" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 0)
                         |> .bankOffset
                         |> Expect.equal Byte.zero
             , test "Should select ROM bank 1 by writing a 1" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 1)
                         |> .bankOffset
                         |> Expect.equal Byte.zero
             , test "Should select ROM bank 2 by writing a 2" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 2)
                         |> .bankOffset
                         |> Expect.equal (Byte.fromInt 1)
             , test "Should select RAM bank 2" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x6000 (Byte.fromInt 1)
                         |> writeByte 0x4000 (Byte.fromInt 2)
                         |> .extRamOffset
@@ -85,7 +95,7 @@ suite =
             , test "Accessing bank 0x21 accesses 0x20 instead" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 0x21)
                         |> writeByte 0x4000 (Byte.fromInt 0x01)
                         |> .bankOffset
@@ -93,7 +103,7 @@ suite =
             , test "Accessing bank 0x41 accesses 0x40 instead" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 0x41)
                         |> writeByte 0x4000 (Byte.fromInt 0x02)
                         |> .bankOffset
@@ -101,7 +111,7 @@ suite =
             , test "Accessing bank 0x61 accesses 0x60 instead" <|
                 \_ ->
                     MMU.init
-                        |> MMU.loadRom mbc1ROM
+                        |> loadROM mbc1ROM
                         |> writeByte 0x2000 (Byte.fromInt 0x61)
                         |> writeByte 0x4000 (Byte.fromInt 0x03)
                         |> .bankOffset
@@ -133,11 +143,26 @@ writeByte addr =
         (Word.fromInt addr)
 
 
-mbc1ROM : List Byte
-mbc1ROM =
+mockROM : Int -> List Byte
+mockROM romType =
     List.append
         (List.repeat 0x0147 (Byte.fromInt 0x00))
-        [ Byte.fromInt 0x01 ]
+        [ Byte.fromInt romType ]
+
+
+mbc1ROM : List Byte
+mbc1ROM =
+    mockROM 0x01
+
+
+invalidROM : List Byte
+invalidROM =
+    mockROM 0x14
+
+
+loadROM : List Byte -> MMU -> MMU
+loadROM codes =
+    Result.withDefault MMU.init << MMU.loadROM codes
 
 
 ramDisableByte : Fuzzer Byte
