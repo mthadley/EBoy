@@ -192,11 +192,7 @@ writeByte word val mmu =
 {-| Handles writes to ROM bank 0.
 -}
 writeROM : Word -> Byte -> MMU -> MMU
-writeROM word val mmu =
-    let
-        addr =
-            Word.toInt word
-    in
+writeROM addr val mmu =
     case romWrite mmu.romType addr val of
         Noop ->
             mmu
@@ -260,7 +256,6 @@ type ROMType
     = ROMOnly
     | MBC1 Mode
     | MBC2
-    | MBC3
 
 
 {-| Determines the operation mode of the ROM:
@@ -293,21 +288,6 @@ readROMType memory =
 
         0x06 ->
             Ok MBC2
-
-        0x0F ->
-            Ok MBC3
-
-        0x10 ->
-            Ok MBC3
-
-        0x11 ->
-            Ok MBC3
-
-        0x12 ->
-            Ok MBC3
-
-        0x13 ->
-            Ok MBC3
 
         _ ->
             Err UnsupportedROMType
@@ -384,8 +364,12 @@ type ROMRegion
 {-| Takes an address and determines the logical
 region being addressed.
 -}
-romRegion : Int -> ROMRegion
-romRegion addr =
+romRegion : Word -> ROMRegion
+romRegion byte =
+    let
+        addr =
+            Word.toInt byte
+    in
     if addr <= 0x1FFF then
         RAMEnableRegion
     else if addr <= 0x3FFF then
@@ -399,9 +383,12 @@ romRegion addr =
 {-| Returns the type of ROM write operation based on the
 address, value, and ROM type.
 -}
-romWrite : ROMType -> Int -> Byte -> ROMWrite
+romWrite : ROMType -> Word -> Byte -> ROMWrite
 romWrite romType addr val =
     case ( romType, romRegion addr ) of
+        ( ROMOnly, _ ) ->
+            Noop
+
         ( MBC1 _, ModeSwitchRegion ) ->
             ModeSwitch <|
                 if Byte.lsbSet val then
@@ -427,18 +414,41 @@ romWrite romType addr val =
                 |> Byte.and mbc1RAMMask
                 |> RAMBankSelect
 
-        ( ROMOnly, _ ) ->
+        ( MBC2, ModeSwitchRegion ) ->
             Noop
 
-        ( _, RAMEnableRegion ) ->
-            val
-                |> Byte.xor ramEnableVal
-                |> Byte.isZero
-                |> RAMEnable
+        ( MBC2, ROMSelectRegion ) ->
+            if isUpperLSBSet addr then
+                val
+                    |> Byte.and mbc2ROMMask
+                    |> ROMBankSelect (Byte.complement mbc2ROMMask)
+            else
+                Noop
 
-        -- TODO: Remove this
-        ( _, _ ) ->
+        ( MBC2, RAMSelectRegion ) ->
+            -- MBC2 Does not support *switchable* external RAM
             Noop
+
+        ( MBC2, RAMEnableRegion ) ->
+            if isUpperLSBSet addr then
+                Noop
+            else
+                ramEnable val
+
+        ( MBC1 _, RAMEnableRegion ) ->
+            ramEnable val
+
+
+ramEnable : Byte -> ROMWrite
+ramEnable =
+    Byte.xor ramEnableVal
+        >> Byte.isZero
+        >> RAMEnable
+
+
+isUpperLSBSet : Word -> Bool
+isUpperLSBSet =
+    Byte.lsbSet << Tuple.first << Word.toBytes
 
 
 decIfNotZero : Byte -> Byte
@@ -454,16 +464,25 @@ mbc1RAMMask =
     Byte.fromInt 0x03
 
 
-{-| MBC1 ROM Bank select mask
+{-| Lower MBC1 ROM Bank select mask
 -}
 mbc1LowerROMMask : Byte
 mbc1LowerROMMask =
     Byte.fromInt 0x1F
 
 
+{-| Upper MBC1 ROM Bank select mask
+-}
 mbc1UpperRomMask : Byte
 mbc1UpperRomMask =
     Byte.fromInt 0x60
+
+
+{-| MBC2 ROM Bank select mask
+-}
+mbc2ROMMask : Byte
+mbc2ROMMask =
+    Byte.fromInt 0x0F
 
 
 {-| The address that holds the cartridge type

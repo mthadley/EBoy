@@ -15,6 +15,7 @@ module Word
         , subc
         , toBytes
         , toInt
+        , zero
         )
 
 import Bitwise
@@ -147,6 +148,13 @@ dec =
 toInt : Word -> Int
 toInt (Word w) =
     w
+
+
+{-| A constant for zero.
+-}
+zero : Word
+zero =
+    fromInt 0
 
 
 mask : Int -> Int

@@ -26,4 +26,8 @@ suite =
                         |> Byte.toInt
                         |> Expect.equal 0x80
             ]
+        , describe "zero"
+            [ test "Should be zero" <|
+                \_ -> Expect.equal (Byte.toInt Byte.zero) 0
+            ]
         ]
