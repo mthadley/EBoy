@@ -15,6 +15,7 @@ module Test.Util
         , toTest
         , withByte
         , withCode
+        , withFlags
         , withMem
         , withWord
         )
@@ -35,6 +36,7 @@ import Z80.State as State
         , init
         , readByteRegister
         , readWordRegister
+        , setFlagsWith
         , writeByteRegister
         , writeWordRegister
         )
@@ -82,6 +84,11 @@ and expectState unit =
                 , expectState
                 ]
     }
+
+
+withFlags : List ( Flag, Bool ) -> Unit -> Unit
+withFlags flags ({ state } as unit) =
+    { unit | state = setFlagsWith flags state }
 
 
 withMem : Int -> Int -> Unit -> Unit

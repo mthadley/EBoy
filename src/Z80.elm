@@ -155,7 +155,7 @@ executeOp op state =
         JR condition ->
             if shouldJump condition state then
                 readDataByte state
-                    |> uncurry addPCByte
+                    |> uncurry addPCSigned
                     |> setJump
                     |> incPC
             else

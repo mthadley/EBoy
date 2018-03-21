@@ -101,6 +101,31 @@ tests =
         |> expectFlags [ Carry => True ]
     , withCode [ 0x18, 0x23 ]
         |> expectWord PC 0x25
+    , withCode [ 0x19 ]
+        |> withWord HL 0x2233
+        |> withWord DE 0x4422
+        |> expectWord DE 0x6655
+    , withCode [ 0x1A ]
+        |> withMem 0xC001 0x08
+        |> withWord DE 0xC001
+        |> expectByte A 0x08
+    , withCode [ 0x1B ]
+        |> withWord DE 0x03
+        |> expectWord DE 0x02
+    , withCode [ 0x1C ]
+        |> withByte E 0x03
+        |> expectByte E 0x04
+    , withCode [ 0x1D ]
+        |> withByte E 0x03
+        |> expectByte E 0x02
+    , withCode [ 0x1E, 0x03 ]
+        |> expectByte E 0x03
+    , withCode [ 0x1F ]
+        |> withByte A 0x40
+        |> expectByte A 0x20
+    , withCode [ 0x20, 0x04 ]
+        |> withFlags [ Zero => False ]
+        |> expectWord PC 0x06
     ]
 
 
@@ -149,6 +174,34 @@ suite =
                         [ Carry => True
                         , Zero => True
                         ]
+                    |> runTest
+                )
+            ]
+        , describe "RRA"
+            [ test "Old 0 bit should be new carry"
+                (withCode [ 0x1F ]
+                    |> withByte A 0x01
+                    |> expectByte A 0x00
+                    |> expectFlags
+                        [ Carry => True
+                        , Zero => True
+                        ]
+                    |> runTest
+                )
+            , test "Carry should be new significant bit"
+                (withCode [ 0x1F ]
+                    |> withFlags [ Carry => True ]
+                    |> expectByte A 0x80
+                    |> expectFlags [ Carry => False ]
+                    |> runTest
+                )
+            ]
+        , describe "JR"
+            [ test "Should add signed data to PC"
+                (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
+                    |> withFlags [ Carry => False ]
+                    |> withWord PC 0x04
+                    |> expectWord PC 0x02
                     |> runTest
                 )
             ]

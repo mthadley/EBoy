@@ -12,6 +12,7 @@ module Word
         , inc
         , incc
         , isZero
+        , map
         , subc
         , toBytes
         , toInt
@@ -78,6 +79,14 @@ toBytes (Word w) =
 add : Word -> Word -> Word
 add a b =
     Carry.value <| addc a b
+
+
+{-| Maps over the `Int` inside of the `Word`. The value will still be
+bounded. Prefer other functions most of the time.
+-}
+map : (Int -> Int) -> Word -> Word
+map f =
+    fromInt << f << toInt
 
 
 {-| Adds an Int to word. The int will be converted to a `Word` before the

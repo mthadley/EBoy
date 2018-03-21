@@ -263,9 +263,27 @@ addPC n state =
     { state | pc = Word.add state.pc <| Word.fromInt n }
 
 
-addPCByte : Byte -> State -> State
-addPCByte byte =
-    addPC <| Byte.toInt byte
+addPCSigned : Byte -> State -> State
+addPCSigned byte state =
+    { state | pc = addByteSigned byte state.pc }
+
+
+addByteSigned : Byte -> Word -> Word
+addByteSigned byte =
+    let
+        sign =
+            if Byte.msbSet byte then
+                -1
+            else
+                1
+
+        val =
+            byte
+                |> Byte.reset 7
+                |> Byte.toInt
+                |> (*) sign
+    in
+    Word.map ((+) val)
 
 
 incPC : State -> State
