@@ -199,9 +199,16 @@ suite =
         , describe "JR"
             [ test "Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
-                    |> withFlags [ Carry => False ]
+                    |> withFlags [ Zero => False ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
+                    |> runTest
+                )
+            , test "Should not jump"
+                (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
+                    |> withFlags [ Zero => True ]
+                    |> withWord PC 0x04
+                    |> expectWord PC 0x06
                     |> runTest
                 )
             ]
