@@ -10,6 +10,7 @@ module Test.Util
         , expectMode
         , expectOk
         , expectWord
+        , runFuzz
         , runTest
         , toExpectation
         , toTest
@@ -239,10 +240,14 @@ onFail loc val actual =
             ++ toString actual
 
 
+runFuzz : Unit -> Expectation
+runFuzz { codes, expectState, state } =
+    toExpectation expectState <| next state
+
+
 runTest : Unit -> () -> Expectation
-runTest { codes, expectState, state } =
-    (toExpectation expectState <| next state)
-        |> always
+runTest =
+    always << runFuzz
 
 
 toTest : Unit -> Test

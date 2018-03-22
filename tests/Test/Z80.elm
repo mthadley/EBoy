@@ -1,7 +1,8 @@
 module Test.Z80 exposing (..)
 
 import Basics.Extra exposing ((=>))
-import Test exposing (Test, describe, test)
+import Fuzz exposing (int)
+import Test exposing (Test, describe, fuzz, test)
 import Test.Util exposing (..)
 import Z80.Flag exposing (Flag(..))
 import Z80.Mode as Mode
@@ -318,7 +319,7 @@ suite =
                 )
             ]
         , describe "CPL"
-            [ test "Should set correct flags"
+            [ test "Should flip each bit"
                 (withCode [ 0x2F ]
                     |> withByte A 0x55
                     |> expectByte A 0xAA
@@ -328,5 +329,14 @@ suite =
                         ]
                     |> runTest
                 )
+            , fuzz int "Should always set Subtract and HalfCarry flags" <|
+                \val ->
+                    withCode [ 0x2F ]
+                        |> withByte A val
+                        |> expectFlags
+                            [ Subtract => True
+                            , HalfCarry => True
+                            ]
+                        |> runFuzz
             ]
         ]
