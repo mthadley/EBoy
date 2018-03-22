@@ -144,7 +144,13 @@ executeOp op state =
                 |> incPC
 
         RRCA ->
-            incPC <| rotate (OnRegister A) Right False state
+            rotate (OnRegister A) Right False state
+                |> resetFlags
+                    [ Flag.Zero
+                    , Flag.Subtract
+                    , Flag.HalfCarry
+                    ]
+                |> incPC
 
         STOP ->
             incPC <| { state | mode = Mode.Stopped }
@@ -164,7 +170,13 @@ executeOp op state =
                     |> incPC
 
         RRA ->
-            incPC <| rotate (OnRegister A) Right True state
+            rotate (OnRegister A) Right True state
+                |> resetFlags
+                    [ Flag.Zero
+                    , Flag.Subtract
+                    , Flag.HalfCarry
+                    ]
+                |> incPC
 
         LDI target source ->
             LB.readSource source state
@@ -191,7 +203,7 @@ executeOp op state =
             readByteRegister A state
                 |> Byte.complement
                 |> writeByteRegister A state
-                |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
+                |> setFlags [ Flag.HalfCarry, Flag.Subtract ]
                 |> incPC
 
         LDD target source ->

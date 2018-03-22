@@ -27,6 +27,12 @@ tests =
         |> expectWord HL 0x00
         |> expectWord DE 0x00
         |> expectWord AF 0x00
+        |> expectFlags
+            [ Carry => False
+            , Zero => False
+            , Subtract => False
+            , HalfCarry => False
+            ]
     , withCode [ 0x01, 0x01, 0x02 ]
         |> expectByte B 0x02
         |> expectByte C 0x01
@@ -126,6 +132,54 @@ tests =
     , withCode [ 0x20, 0x04 ]
         |> withFlags [ Zero => False ]
         |> expectWord PC 0x06
+    , withCode [ 0x21, 0x04, 0x06 ]
+        |> expectWord HL 0x0604
+        |> expectWord PC 0x03
+    , withCode [ 0x22 ]
+        |> withByte A 0x07
+        |> withWord HL 0xC001
+        |> expectMem 0xC001 0x07
+        |> expectWord HL 0xC002
+    , withCode [ 0x23 ]
+        |> withWord HL 0x2323
+        |> expectWord HL 0x2324
+    , withCode [ 0x24 ]
+        |> expectByte H 0x01
+    , withCode [ 0x25 ]
+        |> expectByte H 0xFF
+    , withCode [ 0x26, 0x07 ]
+        |> expectByte H 0x07
+    , withCode [ 0x27 ]
+        |> withByte A 0x0F
+        |> expectByte A 0x15
+    , withCode [ 0x28, 0x04 ]
+        |> withFlags [ Zero => True ]
+        |> expectWord PC 0x06
+    , withCode [ 0x29 ]
+        |> withWord HL 0x06
+        |> expectWord HL 0x0C
+    , withCode [ 0x2A ]
+        |> withWord HL 0xC001
+        |> withMem 0xC001 0x32
+        |> expectByte A 0x32
+        |> expectWord HL 0xC002
+    , withCode [ 0x2B ]
+        |> expectWord HL 0xFFFF
+        |> expectFlags
+            [ Carry => False
+            , Zero => False
+            , Subtract => False
+            , HalfCarry => False
+            ]
+    , withCode [ 0x2C ]
+        |> expectByte L 0x01
+    , withCode [ 0x2D ]
+        |> expectByte L 0xFF
+    , withCode [ 0x2E, 0x34 ]
+        |> expectByte L 0x34
+    , withCode [ 0x2F ]
+        |> withByte A 0x55
+        |> expectByte A 0xAA
     ]
 
 
@@ -141,16 +195,20 @@ suite =
                     |> expectFlags
                         [ Carry => False
                         , Zero => False
+                        , Subtract => False
+                        , HalfCarry => False
                         ]
                     |> runTest
                 )
-            , test "Should set zero flag if result is zero"
+            , test "Should always reset zero flag"
                 (withCode [ 0x0F ]
                     |> withByte A 0x00
                     |> expectByte A 0x00
                     |> expectFlags
                         [ Carry => False
-                        , Zero => True
+                        , Zero => False
+                        , Subtract => False
+                        , HalfCarry => False
                         ]
                     |> runTest
                 )
@@ -184,7 +242,9 @@ suite =
                     |> expectByte A 0x00
                     |> expectFlags
                         [ Carry => True
-                        , Zero => True
+                        , Zero => False
+                        , Subtract => False
+                        , HalfCarry => False
                         ]
                     |> runTest
                 )
@@ -192,23 +252,80 @@ suite =
                 (withCode [ 0x1F ]
                     |> withFlags [ Carry => True ]
                     |> expectByte A 0x80
-                    |> expectFlags [ Carry => False ]
+                    |> expectFlags
+                        [ Carry => False
+                        , Zero => False
+                        , Subtract => False
+                        , HalfCarry => False
+                        ]
                     |> runTest
                 )
             ]
         , describe "JR"
-            [ test "Should add signed data to PC"
+            [ test "NZ, Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
                     |> withFlags [ Zero => False ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
                     |> runTest
                 )
-            , test "Should not jump"
+            , test "NZ, Should not jump"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
                     |> withFlags [ Zero => True ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x06
+                    |> runTest
+                )
+            , test "Z, Should add signed data to PC"
+                (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
+                    |> withFlags [ Zero => True ]
+                    |> withWord PC 0x04
+                    |> expectWord PC 0x02
+                    |> runTest
+                )
+            , test "Z, Should not jump"
+                (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
+                    |> withFlags [ Zero => False ]
+                    |> withWord PC 0x04
+                    |> expectWord PC 0x06
+                    |> runTest
+                )
+            ]
+        , describe "DAA"
+            [ test "should not adjust number, already BCD"
+                (withCode [ 0x27 ]
+                    |> withByte A 0x00
+                    |> expectByte A 0x00
+                    |> runTest
+                )
+            , test "should adjust number, not BCD"
+                (withCode [ 0x27 ]
+                    |> withByte A 0x0A
+                    |> expectByte A 0x10
+                    |> runTest
+                )
+            , test "should adjust higher nibble"
+                (withCode [ 0x27 ]
+                    |> withByte A 0xF0
+                    |> expectByte A 0x50
+                    |> runTest
+                )
+            , test "should not adjust high nibble, already BCD"
+                (withCode [ 0x27 ]
+                    |> withByte A 0x90
+                    |> expectByte A 0x90
+                    |> runTest
+                )
+            ]
+        , describe "CPL"
+            [ test "Should set correct flags"
+                (withCode [ 0x2F ]
+                    |> withByte A 0x55
+                    |> expectByte A 0xAA
+                    |> expectFlags
+                        [ Subtract => True
+                        , HalfCarry => True
+                        ]
                     |> runTest
                 )
             ]
