@@ -1,7 +1,6 @@
 module Test.Z80 exposing (..)
 
 import Basics.Extra exposing ((=>))
-import Expect exposing (Expectation)
 import Fuzz exposing (bool, int)
 import Test exposing (Test, describe, fuzz, fuzz4, test)
 import Test.Util exposing (..)
