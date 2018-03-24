@@ -11,6 +11,7 @@ module Test.Util
         , expectOk
         , expectWord
         , runFuzz
+        , runFuzz4
         , runTest
         , toExpectation
         , toTest
@@ -24,7 +25,7 @@ module Test.Util
 import Byte exposing (Byte)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
-import Test exposing (Test, test)
+import Test exposing (Test, fuzz, fuzz4, test)
 import Word
 import Z80 exposing (next)
 import Z80.Flag as Flag exposing (Flag)
@@ -240,19 +241,42 @@ onFail loc val actual =
             ++ toString actual
 
 
-runFuzz : Unit -> Expectation
-runFuzz { codes, expectState, state } =
+runTest : String -> Unit -> Test
+runTest desc =
+    test desc << always << fromUnit
+
+
+runFuzz : Fuzzer a -> String -> (a -> Unit) -> Test
+runFuzz fuzzer desc f =
+    fuzz fuzzer desc (fromUnit << f)
+
+
+runFuzz4 :
+    Fuzzer a
+    -> Fuzzer b
+    -> Fuzzer c
+    -> Fuzzer d
+    -> String
+    -> (a -> b -> c -> d -> Unit)
+    -> Test
+runFuzz4 fuzzerA fuzzerB fuzzerC fuzzerD desc f =
+    fuzz4 fuzzerA
+        fuzzerB
+        fuzzerC
+        fuzzerD
+        desc
+        (\a b c d -> fromUnit <| f a b c d)
+
+
+fromUnit : Unit -> Expectation
+fromUnit { codes, expectState, state } =
     toExpectation expectState <| next state
-
-
-runTest : Unit -> () -> Expectation
-runTest =
-    always << runFuzz
 
 
 toTest : Unit -> Test
 toTest unit =
-    runTest unit
+    fromUnit unit
+        |> always
         |> test ("Should match expected state: " ++ toString unit.codes)
 
 

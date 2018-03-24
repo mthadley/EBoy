@@ -243,7 +243,7 @@ suite =
     describe "Z80"
         [ describe "Basic Op code tests" <| List.map toTest tests
         , describe "RRCA"
-            [ test "Should rotate through carry" <|
+            [ runTest "Should rotate through carry" <|
                 (withCode [ 0x0F ]
                     |> withByte A 0x02
                     |> expectByte A 0x01
@@ -253,9 +253,8 @@ suite =
                         , Subtract => False
                         , HalfCarry => False
                         ]
-                    |> runTest
                 )
-            , test "Should always reset zero flag"
+            , runTest "Should always reset zero flag"
                 (withCode [ 0x0F ]
                     |> withByte A 0x00
                     |> expectByte A 0x00
@@ -265,11 +264,10 @@ suite =
                         , Subtract => False
                         , HalfCarry => False
                         ]
-                    |> runTest
                 )
             ]
         , describe "RLA"
-            [ test "Should rotate through carry" <|
+            [ runTest "Should rotate through carry" <|
                 (withCode [ 0x17 ]
                     |> withByte A 0x01
                     |> expectByte A 0x02
@@ -277,9 +275,8 @@ suite =
                         [ Carry => False
                         , Zero => False
                         ]
-                    |> runTest
                 )
-            , test "Should set zero flag if result is zero"
+            , runTest "Should set zero flag if result is zero"
                 (withCode [ 0x17 ]
                     |> withByte A 0x80
                     |> expectByte A 0x00
@@ -287,11 +284,10 @@ suite =
                         [ Carry => True
                         , Zero => True
                         ]
-                    |> runTest
                 )
             ]
         , describe "RRA"
-            [ test "Old 0 bit should be new carry"
+            [ runTest "Old 0 bit should be new carry"
                 (withCode [ 0x1F ]
                     |> withByte A 0x01
                     |> expectByte A 0x00
@@ -301,9 +297,8 @@ suite =
                         , Subtract => False
                         , HalfCarry => False
                         ]
-                    |> runTest
                 )
-            , test "Carry should be new significant bit"
+            , runTest "Carry should be new significant bit"
                 (withCode [ 0x1F ]
                     |> withFlags [ Carry => True ]
                     |> expectByte A 0x80
@@ -313,67 +308,58 @@ suite =
                         , Subtract => False
                         , HalfCarry => False
                         ]
-                    |> runTest
                 )
             ]
         , describe "JR"
-            [ test "NZ, Should add signed data to PC"
+            [ runTest "NZ, Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
                     |> withFlags [ Zero => False ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
-                    |> runTest
                 )
-            , test "NZ, Should not jump"
+            , runTest "NZ, Should not jump"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
                     |> withFlags [ Zero => True ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x06
-                    |> runTest
                 )
-            , test "Z, Should add signed data to PC"
+            , runTest "Z, Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
                     |> withFlags [ Zero => True ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
-                    |> runTest
                 )
-            , test "Z, Should not jump"
+            , runTest "Z, Should not jump"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
                     |> withFlags [ Zero => False ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x06
-                    |> runTest
                 )
             ]
         , describe "DAA"
-            [ test "should not adjust number, already BCD"
+            [ runTest "should not adjust number, already BCD"
                 (withCode [ 0x27 ]
                     |> withByte A 0x00
                     |> expectByte A 0x00
-                    |> runTest
                 )
-            , test "should adjust number, not BCD"
+            , runTest "should adjust number, not BCD"
                 (withCode [ 0x27 ]
                     |> withByte A 0x0A
                     |> expectByte A 0x10
-                    |> runTest
                 )
-            , test "should adjust higher nibble"
+            , runTest "should adjust higher nibble"
                 (withCode [ 0x27 ]
                     |> withByte A 0xF0
                     |> expectByte A 0x50
-                    |> runTest
                 )
-            , test "should not adjust high nibble, already BCD"
+            , runTest "should not adjust high nibble, already BCD"
                 (withCode [ 0x27 ]
                     |> withByte A 0x90
                     |> expectByte A 0x90
-                    |> runTest
                 )
             ]
         , describe "CPL"
-            [ test "Should flip each bit"
+            [ runTest "Should flip each bit"
                 (withCode [ 0x2F ]
                     |> withByte A 0x55
                     |> expectByte A 0xAA
@@ -381,9 +367,8 @@ suite =
                         [ Subtract => True
                         , HalfCarry => True
                         ]
-                    |> runTest
                 )
-            , fuzz int "Should always set Subtract and HalfCarry flags" <|
+            , runFuzz int "Should always set Subtract and HalfCarry flags" <|
                 \val ->
                     withCode [ 0x2F ]
                         |> withByte A val
@@ -391,7 +376,6 @@ suite =
                             [ Subtract => True
                             , HalfCarry => True
                             ]
-                        |> runFuzz
             ]
         , describe "SCF"
             [ fuzzFlags "Should set carry flag" <|
@@ -409,10 +393,9 @@ suite =
                             , Carry => True
                             , Zero => zero
                             ]
-                        |> runFuzz
             ]
         , describe "INC"
-            [ fuzz bool "Should set correct flags" <|
+            [ runFuzz bool "Should set correct flags" <|
                 \carry ->
                     withCode [ 0x3C ]
                         |> withFlags
@@ -423,10 +406,9 @@ suite =
                             [ Carry => carry
                             , Subtract => False
                             ]
-                        |> runFuzz
             ]
         , describe "DEC"
-            [ fuzz bool "Should set correct flags" <|
+            [ runFuzz bool "Should set correct flags" <|
                 \carry ->
                     withCode [ 0x3D ]
                         |> withFlags
@@ -437,7 +419,6 @@ suite =
                             [ Carry => carry
                             , Subtract => True
                             ]
-                        |> runFuzz
             ]
         , describe "CCF"
             [ fuzzFlags "Should complement carry flag" <|
@@ -455,14 +436,13 @@ suite =
                             , Carry => not carry
                             , Zero => zero
                             ]
-                        |> runFuzz
             ]
         ]
 
 
 fuzzFlags :
     String
-    -> (Bool -> Bool -> Bool -> Bool -> Expectation)
+    -> (Bool -> Bool -> Bool -> Bool -> Unit)
     -> Test
 fuzzFlags =
-    fuzz4 bool bool bool bool
+    runFuzz4 bool bool bool bool
