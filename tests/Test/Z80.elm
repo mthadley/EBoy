@@ -234,6 +234,202 @@ tests =
             , HalfCarry => False
             , Carry => True
             ]
+    , withCode [ 0x40 ]
+        |> expectByte B 0x00
+    , withCode [ 0x41 ]
+        |> withByte C 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x42 ]
+        |> withByte D 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x43 ]
+        |> withByte E 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x44 ]
+        |> withByte H 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x45 ]
+        |> withByte L 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x46 ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte B 0x86
+    , withCode [ 0x47 ]
+        |> withByte A 0x23
+        |> expectByte B 0x23
+    , withCode [ 0x48 ]
+        |> expectByte C 0x00
+    , withCode [ 0x49 ]
+        |> withByte C 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x4A ]
+        |> withByte D 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x4B ]
+        |> withByte E 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x4C ]
+        |> withByte H 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x4D ]
+        |> withByte L 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x4E ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte C 0x86
+    , withCode [ 0x4F ]
+        |> withByte A 0x23
+        |> expectByte C 0x23
+    , withCode [ 0x50 ]
+        |> expectByte D 0x00
+    , withCode [ 0x51 ]
+        |> withByte C 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x52 ]
+        |> withByte D 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x53 ]
+        |> withByte E 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x54 ]
+        |> withByte H 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x55 ]
+        |> withByte L 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x56 ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte D 0x86
+    , withCode [ 0x57 ]
+        |> withByte A 0x23
+        |> expectByte D 0x23
+    , withCode [ 0x58 ]
+        |> expectByte E 0x00
+    , withCode [ 0x59 ]
+        |> withByte C 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x5A ]
+        |> withByte D 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x5B ]
+        |> withByte E 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x5C ]
+        |> withByte H 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x5D ]
+        |> withByte L 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x5E ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte E 0x86
+    , withCode [ 0x5F ]
+        |> withByte A 0x23
+        |> expectByte E 0x23
+    , withCode [ 0x60 ]
+        |> expectByte H 0x00
+    , withCode [ 0x61 ]
+        |> withByte C 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x62 ]
+        |> withByte D 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x63 ]
+        |> withByte E 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x64 ]
+        |> withByte H 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x65 ]
+        |> withByte L 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x66 ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte H 0x86
+    , withCode [ 0x67 ]
+        |> withByte A 0x23
+        |> expectByte H 0x23
+    , withCode [ 0x68 ]
+        |> expectByte L 0x00
+    , withCode [ 0x69 ]
+        |> withByte C 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x6A ]
+        |> withByte D 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x6B ]
+        |> withByte E 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x6C ]
+        |> withByte H 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x6D ]
+        |> withByte L 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x6E ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte L 0x86
+    , withCode [ 0x6F ]
+        |> withByte A 0x23
+        |> expectByte L 0x23
+    , withCode [ 0x70 ]
+        |> withWord HL 0xC223
+        |> withByte B 0x86
+        |> expectMem 0xC223 0x86
+    , withCode [ 0x71 ]
+        |> withWord HL 0xC223
+        |> withByte C 0x86
+        |> expectMem 0xC223 0x86
+    , withCode [ 0x72 ]
+        |> withWord HL 0xC223
+        |> withByte D 0x86
+        |> expectMem 0xC223 0x86
+    , withCode [ 0x73 ]
+        |> withWord HL 0xC223
+        |> withByte E 0x86
+        |> expectMem 0xC223 0x86
+    , withCode [ 0x74 ]
+        |> withWord HL 0xC223
+        |> expectMem 0xC223 0xC2
+    , withCode [ 0x75 ]
+        |> withWord HL 0xC223
+        |> expectMem 0xC223 0x23
+    , withCode [ 0x76 ]
+        |> expectMode Mode.Halted
+    , withCode [ 0x77 ]
+        |> withWord HL 0xC223
+        |> withByte A 0x86
+        |> expectMem 0xC223 0x86
+    , withCode [ 0x78 ]
+        |> expectByte A 0x00
+    , withCode [ 0x79 ]
+        |> withByte C 0x23
+        |> expectByte A 0x23
+    , withCode [ 0x7A ]
+        |> withByte D 0x23
+        |> expectByte A 0x23
+    , withCode [ 0x7B ]
+        |> withByte E 0x23
+        |> expectByte A 0x23
+    , withCode [ 0x7C ]
+        |> withByte H 0x23
+        |> expectByte A 0x23
+    , withCode [ 0x7D ]
+        |> withByte L 0x23
+        |> expectByte A 0x23
+    , withCode [ 0x7E ]
+        |> withMem 0xC001 0x86
+        |> withWord HL 0xC001
+        |> expectByte A 0x86
+    , withCode [ 0x7F ]
+        |> withByte A 0x23
+        |> expectByte A 0x23
     ]
 
 
@@ -433,6 +629,23 @@ suite =
                             [ Subtract => False
                             , HalfCarry => False
                             , Carry => not carry
+                            , Zero => zero
+                            ]
+            ]
+        , describe "LD"
+            [ fuzzFlags "Should not change any flags" <|
+                \zero subtract halfCarry carry ->
+                    withCode [ 0x41 ]
+                        |> withFlags
+                            [ Subtract => subtract
+                            , HalfCarry => halfCarry
+                            , Carry => carry
+                            , Zero => zero
+                            ]
+                        |> expectFlags
+                            [ Subtract => subtract
+                            , HalfCarry => halfCarry
+                            , Carry => carry
                             , Zero => zero
                             ]
             ]
