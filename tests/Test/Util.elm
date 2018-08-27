@@ -1,26 +1,25 @@
-module Test.Util
-    exposing
-        ( ExpectState
-        , Unit
-        , byte
-        , expectByte
-        , expectFlags
-        , expectMem
-        , expectMemWord
-        , expectMode
-        , expectOk
-        , expectWord
-        , runFuzz
-        , runFuzz4
-        , runTest
-        , toExpectation
-        , toTest
-        , withByte
-        , withCode
-        , withFlags
-        , withMem
-        , withWord
-        )
+module Test.Util exposing
+    ( ExpectState
+    , Unit
+    , byte
+    , expectByte
+    , expectFlags
+    , expectMem
+    , expectMemWord
+    , expectMode
+    , expectOk
+    , expectWord
+    , runFuzz
+    , runFuzz4
+    , runTest
+    , toExpectation
+    , toTest
+    , withByte
+    , withCode
+    , withFlags
+    , withMem
+    , withWord
+    )
 
 import Byte exposing (Byte)
 import Expect exposing (Expectation)
@@ -68,7 +67,7 @@ withCode codes =
         mmu =
             codes
                 |> List.map Byte.fromInt
-                |> flip MMU.loadROM MMU.init
+                |> (\a -> MMU.loadROM a MMU.init)
                 |> Result.withDefault MMU.init
     in
     { expectState = None
@@ -167,15 +166,15 @@ toExpectation expectState state =
         Batch expects ->
             expects
                 |> List.map toExpectation
-                |> flip Expect.all state
+                |> (\a -> Expect.all a state)
 
         ExpectMode mode ->
             Expect.equal mode <| state.mode
 
         ExpectFlags pairs ->
             pairs
-                |> List.map (uncurry flagToExpectation)
-                |> flip Expect.all state.f
+                |> List.map (\( a, b ) -> flagToExpectation a b)
+                |> (\a -> Expect.all a state.f)
 
         ExpectByteRegister register val ->
             let

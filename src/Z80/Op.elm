@@ -1,4 +1,4 @@
-module Z80.Op exposing (..)
+module Z80.Op exposing (FlagCondition(..), JumpTarget(..), Op(..), Param(..), ParamData(..))
 
 {-| Types of Z80 operations.
 -}

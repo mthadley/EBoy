@@ -1,4 +1,4 @@
-module Test.Word exposing (..)
+module Test.Word exposing (suite)
 
 import Expect
 import Fuzz exposing (int)

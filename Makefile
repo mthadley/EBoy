@@ -10,7 +10,7 @@ clean:
 	@rm -fr $(OUT) elm-stuff tests/elm-stuff
 
 $(ELM_MAIN): $(ELM_FILES)
-	elm-make --yes src/Main.elm --warn --output $@
+	elm make src/Main.elm --output $@
 
 $(OUT)/index.html: src/index.html
 	@cp $< $@

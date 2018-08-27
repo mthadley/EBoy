@@ -1,6 +1,5 @@
 module Z80 exposing (next)
 
-import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
 import Util
@@ -55,6 +54,7 @@ decodeIfCB state ( op, cycles ) =
                     |> Decode.decodeCB
         in
         ( newOp, newCycles, newState )
+
     else
         ( op, cycles, state )
 
@@ -69,7 +69,7 @@ executeOp : Op -> State -> State
 executeOp op state =
     case op of
         INVALID x ->
-            Debug.crash <| toString x
+            Debug.todo <| String.fromInt x
 
         NONE ->
             incPC state
@@ -94,7 +94,7 @@ executeOp op state =
 
         INC param ->
             applyWith Byte.incc param state
-                |> uncurry setIncFlags
+                |> (\( a, b ) -> setIncFlags a b)
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -103,7 +103,7 @@ executeOp op state =
 
         DEC param ->
             applyWith Byte.decc param state
-                |> uncurry setIncFlags
+                |> (\( a, b ) -> setIncFlags a b)
                 |> setFlag Flag.Subtract
                 |> incPC
 
@@ -112,13 +112,13 @@ executeOp op state =
 
         ADD param ->
             accCarryWith Byte.addc param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
         ADC param ->
             accPlusCarryWith Byte.addc param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -127,7 +127,7 @@ executeOp op state =
                 |> Word.addc (readWordRegister HL state)
                 |> Util.clone
                 |> Tuple.mapSecond (writeWordRegister register state << Carry.value)
-                |> uncurry setCarryFlags
+                |> (\( a, b ) -> setCarryFlags a b)
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -139,7 +139,7 @@ executeOp op state =
             Word.addc (readWordRegister SP newState) (Word.fromByte byte)
                 |> Util.clone
                 |> Tuple.mapSecond (writeWordRegister SP newState << Carry.value)
-                |> uncurry setCarryFlags
+                |> (\( a, b ) -> setCarryFlags a b)
                 |> resetFlags [ Flag.Zero, Flag.Subtract ]
                 |> incPC
 
@@ -161,9 +161,10 @@ executeOp op state =
         JR condition ->
             if shouldJump condition state then
                 readDataByte state
-                    |> uncurry addPCSigned
+                    |> (\( a, b ) -> addPCSigned a b)
                     |> setJump
                     |> incPC
+
             else
                 readDataByte state
                     |> Tuple.second
@@ -195,7 +196,7 @@ executeOp op state =
                 |> bcdCorrect High (Flag.isSet Flag.Carry state.f) subtract
                 |> Util.clone
                 |> Tuple.mapSecond (writeByteRegister A state << Carry.value)
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.HalfCarry
                 |> incPC
 
@@ -220,7 +221,7 @@ executeOp op state =
 
         CCF ->
             state
-                |> setFlagsWith [ Flag.Carry => (not <| Flag.isSet Flag.Carry state.f) ]
+                |> setFlagsWith [ ( Flag.Carry, not <| Flag.isSet Flag.Carry state.f ) ]
                 |> resetFlags [ Flag.HalfCarry, Flag.Subtract ]
                 |> incPC
 
@@ -229,45 +230,46 @@ executeOp op state =
 
         SUB param ->
             accCarryWith Byte.subc param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
 
         SBC param ->
             accPlusCarryWith Byte.subc param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
 
         AND param ->
             accByteWith Byte.and param state
-                |> uncurry setZeroFlag
+                |> (\( a, b ) -> setZeroFlag a b)
                 |> resetFlags [ Flag.Subtract, Flag.Carry ]
                 |> setFlag Flag.HalfCarry
                 |> incPC
 
         OR param ->
             accByteWith Byte.or param state
-                |> uncurry setZeroFlag
+                |> (\( a, b ) -> setZeroFlag a b)
                 |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
                 |> incPC
 
         XOR param ->
             accByteWith Byte.xor param state
-                |> uncurry setZeroFlag
+                |> (\( a, b ) -> setZeroFlag a b)
                 |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
                 |> incPC
 
         CP param ->
             readParamData param state
                 |> Tuple.mapFirst (Byte.subc <| readByteRegister A state)
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> setFlag Flag.Subtract
                 |> incPC
 
         RET condition ->
             if shouldJump condition state then
                 setJump <| popSP PC state
+
             else
                 incPC <| state
 
@@ -279,6 +281,7 @@ executeOp op state =
                 readJumpTarget target state
                     |> writeWordRegister PC state
                     |> setJump
+
             else
                 incPC <| state
 
@@ -288,7 +291,8 @@ executeOp op state =
                     |> Word.addInt 3
                     |> pushSPWord state
                     |> readDataWord
-                    |> uncurry (flip <| writeWordRegister PC)
+                    |> (\( w, newState ) -> writeWordRegister PC newState w)
+
             else
                 incPC <| state
 
@@ -324,13 +328,13 @@ executeOp op state =
 
         SLA param ->
             applyWith Byte.shiftLeft param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
         SRA param ->
             applyWith Byte.shiftRight param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -341,12 +345,12 @@ executeOp op state =
             in
             writeParam param state result
                 |> resetFlags [ Flag.Subtract, Flag.Carry, Flag.HalfCarry ]
-                |> setFlagsWith [ Flag.Zero => Byte.isZero result ]
+                |> setFlagsWith [ ( Flag.Zero, Byte.isZero result ) ]
                 |> incPC
 
         SRL param ->
             applyWith Byte.shiftRightZf param state
-                |> uncurry setAccFlags
+                |> setAccFlags
                 |> resetFlag Flag.Subtract
                 |> incPC
 
@@ -356,7 +360,7 @@ executeOp op state =
                     Byte.getBit bit <| readParam param state
             in
             state
-                |> setFlagsWith [ Flag.Zero => not isSet ]
+                |> setFlagsWith [ ( Flag.Zero, not isSet ) ]
                 |> setFlag Flag.HalfCarry
                 |> resetFlag Flag.Subtract
                 |> incPC
@@ -473,6 +477,7 @@ rotate param direction throughCarry state =
         carryIn =
             if throughCarry then
                 Byte.setWith bit (Flag.isSet Flag.Carry state.f)
+
             else
                 identity
 
@@ -483,8 +488,8 @@ rotate param direction throughCarry state =
         |> writeParam param state
         |> resetFlags [ Flag.Subtract, Flag.HalfCarry ]
         |> setFlagsWith
-            [ Flag.Carry => isBitSet byte
-            , Flag.Zero => Byte.isZero result
+            [ ( Flag.Carry, isBitSet byte )
+            , ( Flag.Zero, Byte.isZero result )
             ]
 
 
@@ -563,10 +568,12 @@ bcdCorrect nibble wasCarry wasSub byte =
         amount =
             if wasSub then
                 val * -1
+
             else
                 val
     in
     if wasCarry || getNibble byte > 9 then
         Byte.addc byte <| Byte.fromInt amount
+
     else
         Carry.withoutOp byte

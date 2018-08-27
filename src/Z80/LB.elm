@@ -1,4 +1,4 @@
-module Z80.LB exposing (..)
+module Z80.LB exposing (Source(..), Target(..), readSource, writeTarget)
 
 import Byte exposing (Byte)
 import Z80.Registers exposing (..)

@@ -1,4 +1,4 @@
-module Test.Z80 exposing (..)
+module Test.Z80 exposing (fuzzFlags, suite, tests)
 
 import Basics.Extra exposing ((=>))
 import Fuzz exposing (bool, int)

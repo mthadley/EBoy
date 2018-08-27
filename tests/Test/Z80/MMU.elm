@@ -1,4 +1,4 @@
-module Test.Z80.MMU exposing (..)
+module Test.Z80.MMU exposing (invalidROM, loadROM, mbc1ROM, mbc2ROM, mockROM, ramDisableByte, readByte, suite, writeByte)
 
 import Byte exposing (Byte)
 import Expect
@@ -216,6 +216,7 @@ ramDisableByte =
         (\b ->
             if b == MMU.ramEnableVal then
                 Byte.inc b
+
             else
                 b
         )

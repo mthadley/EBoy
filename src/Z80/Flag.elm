@@ -1,13 +1,12 @@
-module Z80.Flag
-    exposing
-        ( Flag(..)
-        , isSet
-        , reset
-        , resetEach
-        , set
-        , setEach
-        , setWith
-        )
+module Z80.Flag exposing
+    ( Flag(..)
+    , isSet
+    , reset
+    , resetEach
+    , set
+    , setEach
+    , setWith
+    )
 
 import Byte exposing (Byte)
 
@@ -32,15 +31,16 @@ setEach flags byte =
 or reset based on the `Bool`.
 -}
 setWith : List ( Flag, Bool ) -> Byte -> Byte
-setWith flags byte =
+setWith flags currentByte =
     let
         setOrReset ( flag, shouldSet ) byte =
             if shouldSet then
                 set flag byte
+
             else
                 reset flag byte
     in
-    List.foldr setOrReset byte flags
+    List.foldr setOrReset currentByte flags
 
 
 {-| Resets the `Flag`s in the `Byte`.
