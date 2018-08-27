@@ -1,6 +1,5 @@
-module Z80.LW exposing (..)
+module Z80.LW exposing (Source(..), Target(..), readSource, writeTarget)
 
-import Basics.Extra exposing ((=>))
 import Carry
 import Word exposing (Word)
 import Z80.Flag as Flag
@@ -44,8 +43,8 @@ readSource source state =
             in
             ( Carry.value result
             , setFlagsWith
-                [ Flag.Carry => Carry.check result
-                , Flag.HalfCarry => Carry.checkHalf result
+                [ ( Flag.Carry, Carry.check result )
+                , ( Flag.HalfCarry, Carry.checkHalf result )
                 ]
                 state
             )

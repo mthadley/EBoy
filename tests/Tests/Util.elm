@@ -1,31 +1,29 @@
-module Test.Util
-    exposing
-        ( ExpectState
-        , Unit
-        , byte
-        , expectByte
-        , expectFlags
-        , expectMem
-        , expectMemWord
-        , expectMode
-        , expectOk
-        , expectWord
-        , runFuzz
-        , runFuzz4
-        , runTest
-        , toExpectation
-        , toTest
-        , withByte
-        , withCode
-        , withFlags
-        , withMem
-        , withWord
-        )
+module Tests.Util exposing
+    ( ExpectState
+    , Unit
+    , byte
+    , expectByte
+    , expectFlags
+    , expectMem
+    , expectMemWord
+    , expectMode
+    , expectOk
+    , expectWord
+    , runFuzz
+    , runTest
+    , toExpectation
+    , toTest
+    , withByte
+    , withCode
+    , withFlags
+    , withMem
+    , withWord
+    )
 
 import Byte exposing (Byte)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
-import Test exposing (Test, fuzz, fuzz4, test)
+import Test exposing (Test, fuzz, test)
 import Word
 import Z80 exposing (next)
 import Z80.Flag as Flag exposing (Flag)
@@ -68,7 +66,7 @@ withCode codes =
         mmu =
             codes
                 |> List.map Byte.fromInt
-                |> flip MMU.loadROM MMU.init
+                |> (\a -> MMU.loadROM a MMU.init)
                 |> Result.withDefault MMU.init
     in
     { expectState = None
@@ -167,15 +165,15 @@ toExpectation expectState state =
         Batch expects ->
             expects
                 |> List.map toExpectation
-                |> flip Expect.all state
+                |> (\a -> Expect.all a state)
 
         ExpectMode mode ->
             Expect.equal mode <| state.mode
 
         ExpectFlags pairs ->
             pairs
-                |> List.map (uncurry flagToExpectation)
-                |> flip Expect.all state.f
+                |> List.map (\( a, b ) -> flagToExpectation a b)
+                |> (\a -> Expect.all a state.f)
 
         ExpectByteRegister register val ->
             let
@@ -224,9 +222,9 @@ flagToExpectation flag value =
         >> Expect.equal value
         >> Expect.onFail
             ("Flag "
-                ++ toString flag
+                ++ Debug.toString flag
                 ++ " should be "
-                ++ toString value
+                ++ Debug.toString value
             )
 
 
@@ -234,11 +232,11 @@ onFail : a -> b -> c -> Expectation -> Expectation
 onFail loc val actual =
     Expect.onFail <|
         "Location "
-            ++ toString loc
+            ++ Debug.toString loc
             ++ " should be "
-            ++ toString val
+            ++ Debug.toString val
             ++ " but was "
-            ++ toString actual
+            ++ Debug.toString actual
 
 
 runTest : String -> Unit -> Test
@@ -251,23 +249,6 @@ runFuzz fuzzer desc f =
     fuzz fuzzer desc (fromUnit << f)
 
 
-runFuzz4 :
-    Fuzzer a
-    -> Fuzzer b
-    -> Fuzzer c
-    -> Fuzzer d
-    -> String
-    -> (a -> b -> c -> d -> Unit)
-    -> Test
-runFuzz4 fuzzerA fuzzerB fuzzerC fuzzerD desc f =
-    fuzz4 fuzzerA
-        fuzzerB
-        fuzzerC
-        fuzzerD
-        desc
-        (\a b c d -> fromUnit <| f a b c d)
-
-
 fromUnit : Unit -> Expectation
 fromUnit { codes, expectState, state } =
     toExpectation expectState <| next state
@@ -277,7 +258,7 @@ toTest : Unit -> Test
 toTest unit =
     fromUnit unit
         |> always
-        |> test ("Should match expected state: " ++ toString unit.codes)
+        |> test ("Should match expected state: " ++ Debug.toString unit.codes)
 
 
 byte : Fuzzer Byte

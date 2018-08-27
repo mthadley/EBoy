@@ -1,18 +1,17 @@
-module Z80.MMU
-    exposing
-        ( MMU
-        , Mode(..)
-        , ROMType(..)
-        , ROMWrite(..)
-        , init
-        , loadROM
-        , ramEnableVal
-        , readByte
-        , readWord
-        , romWrite
-        , writeByte
-        , writeWord
-        )
+module Z80.MMU exposing
+    ( MMU
+    , Mode(..)
+    , ROMType(..)
+    , ROMWrite(..)
+    , init
+    , loadROM
+    , ramEnableVal
+    , readByte
+    , readWord
+    , romWrite
+    , writeByte
+    , writeWord
+    )
 
 import Bitwise
 import Byte exposing (Byte)
@@ -79,16 +78,16 @@ the address to read from.
 readByte : Word -> MMU -> Byte
 readByte word mmu =
     let
-        addr =
+        targetAddr =
             Word.toInt word
 
         ( actualAddr, memory ) =
             case memoryRegion word of
                 ROMBank0 ->
-                    ( addr, mmu.rom )
+                    ( targetAddr, mmu.rom )
 
                 ROMBank1 ->
-                    ( addr + (Byte.toInt mmu.bankOffset * romSize)
+                    ( targetAddr + (Byte.toInt mmu.bankOffset * romSize)
                     , mmu.rom
                     )
 
@@ -115,18 +114,18 @@ readByte word mmu =
                     ( addr, mmu.sprites )
 
                 MMIO ->
-                    Debug.crash "MMIO reads not implemented!"
+                    Debug.todo "MMIO reads not implemented!"
 
                 ZeroPageRam addr ->
                     ( addr, mmu.zpage )
 
                 InterruptEnable ->
-                    Debug.crash "InterruptEnable not implemented!"
+                    Debug.todo "InterruptEnable not implemented!"
 
                 Invalid ->
-                    Debug.crash <|
+                    Debug.todo <|
                         "Reading from invalid memory location: "
-                            ++ toString addr
+                            ++ String.fromInt targetAddr
     in
     Memory.readByte actualAddr memory
 
@@ -177,16 +176,18 @@ writeByte word val mmu =
             { mmu | sprites = Memory.writeByte addr val mmu.sprites }
 
         MMIO ->
-            Debug.crash "MMIO writes not implemented yet!"
+            Debug.todo "MMIO writes not implemented yet!"
 
         ZeroPageRam addr ->
             { mmu | zpage = Memory.writeByte addr val mmu.zpage }
 
         InterruptEnable ->
-            Debug.crash "InterruptEnable writes not implemented yet!"
+            Debug.todo "InterruptEnable writes not implemented yet!"
 
         Invalid ->
-            Debug.crash <| "Invalid memory write location: " ++ toString word
+            Debug.todo <|
+                "Invalid memory write location: "
+                    ++ String.fromInt (Word.toInt word)
 
 
 {-| Handles writes to ROM bank 0.
@@ -320,24 +321,34 @@ memoryRegion word =
     in
     if addr <= 0x3FFF then
         ROMBank0
+
     else if addr <= 0x7FFF then
         ROMBank1
+
     else if addr <= 0x9FFF then
         VRAM <| ramMask addr
+
     else if addr <= 0xBFFF then
         ExternalRAM <| ramMask addr
+
     else if addr <= 0xDFFF then
         WorkRAM <| ramMask addr
+
     else if addr <= 0xFDFF then
         WorkRAMShadow <| ramMask addr
+
     else if addr <= 0xFE9F then
         Sprites <| addr - 0xFE00
+
     else if addr <= 0xFF7F then
         MMIO
+
     else if addr <= 0xFFFE then
         ZeroPageRam <| Bitwise.and 0x7F addr
+
     else if addr == 0xFFFF then
         InterruptEnable
+
     else
         Invalid
 
@@ -372,10 +383,13 @@ romRegion byte =
     in
     if addr <= 0x1FFF then
         RAMEnableRegion
+
     else if addr <= 0x3FFF then
         ROMSelectRegion
+
     else if addr <= 0x5FFF then
         RAMSelectRegion
+
     else
         ModeSwitchRegion
 
@@ -393,6 +407,7 @@ romWrite romType addr val =
             ModeSwitch <|
                 if Byte.lsbSet val then
                     RAMBankMode
+
                 else
                     ROMBankMode
 
@@ -422,6 +437,7 @@ romWrite romType addr val =
                 val
                     |> Byte.and mbc2ROMMask
                     |> ROMBankSelect (Byte.complement mbc2ROMMask)
+
             else
                 Noop
 
@@ -432,6 +448,7 @@ romWrite romType addr val =
         ( MBC2, RAMEnableRegion ) ->
             if isUpperLSBSet addr then
                 Noop
+
             else
                 ramEnable val
 
@@ -455,6 +472,7 @@ decIfNotZero : Byte -> Byte
 decIfNotZero byte =
     if not <| Byte.isZero byte then
         Byte.dec byte
+
     else
         byte
 

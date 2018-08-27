@@ -1,4 +1,4 @@
-module Test.Byte exposing (..)
+module Tests.Byte exposing (suite)
 
 import Byte
 import Expect

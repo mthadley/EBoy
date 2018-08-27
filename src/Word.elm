@@ -1,23 +1,22 @@
-module Word
-    exposing
-        ( Word
-        , add
-        , addInt
-        , addc
-        , dec
-        , decc
-        , fromByte
-        , fromBytes
-        , fromInt
-        , inc
-        , incc
-        , isZero
-        , map
-        , subc
-        , toBytes
-        , toInt
-        , zero
-        )
+module Word exposing
+    ( Word
+    , add
+    , addInt
+    , addc
+    , dec
+    , decc
+    , fromByte
+    , fromBytes
+    , fromInt
+    , inc
+    , incc
+    , isZero
+    , map
+    , subc
+    , toBytes
+    , toInt
+    , zero
+    )
 
 import Bitwise
 import Byte exposing (Byte)

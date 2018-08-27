@@ -1,11 +1,10 @@
-module Memory
-    exposing
-        ( Memory
-        , init
-        , initFromCodes
-        , readByte
-        , writeByte
-        )
+module Memory exposing
+    ( Memory
+    , init
+    , initFromCodes
+    , readByte
+    , writeByte
+    )
 
 import Array exposing (Array)
 import Byte exposing (Byte)
@@ -38,7 +37,7 @@ initFromCodes ints size =
     ints
         |> List.take size
         |> Array.fromList
-        |> flip Array.append rest
+        |> (\a -> Array.append a rest)
         |> Memory
 
 
@@ -62,4 +61,4 @@ writeByte addr val (Memory array) =
 
 get : Array a -> Int -> Maybe a
 get =
-    flip Array.get
+    \b a -> Array.get a b

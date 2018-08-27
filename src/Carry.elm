@@ -1,12 +1,11 @@
-module Carry
-    exposing
-        ( Carry
-        , check
-        , checkHalf
-        , create
-        , value
-        , withoutOp
-        )
+module Carry exposing
+    ( Carry
+    , check
+    , checkHalf
+    , create
+    , value
+    , withoutOp
+    )
 
 {-| Opaque type representing the result of an operation and whether or not
 there were any carries.
@@ -25,9 +24,9 @@ type Carry a
 carry, and a second `Bool` indicating if there was a half-carry.
 -}
 create : a -> Bool -> Bool -> Carry a
-create value carry halfCarry =
+create val carry halfCarry =
     Carry
-        { value = value
+        { value = val
         , carry = carry
         , halfCarry = halfCarry
         }

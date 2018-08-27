@@ -1,38 +1,37 @@
-module Byte
-    exposing
-        ( Byte
-        , add
-        , addc
-        , and
-        , complement
-        , dec
-        , decc
-        , fromInt
-        , getBit
-        , highNibble
-        , inc
-        , incc
-        , isZero
-        , lowNibble
-        , lsbSet
-        , msbSet
-        , or
-        , reset
-        , rotateLeft
-        , rotateRight
-        , set
-        , setWith
-        , shiftLeft
-        , shiftLeftBy
-        , shiftRight
-        , shiftRightZf
-        , sub
-        , subc
-        , swap
-        , toInt
-        , xor
-        , zero
-        )
+module Byte exposing
+    ( Byte
+    , add
+    , addc
+    , and
+    , complement
+    , dec
+    , decc
+    , fromInt
+    , getBit
+    , highNibble
+    , inc
+    , incc
+    , isZero
+    , lowNibble
+    , lsbSet
+    , msbSet
+    , or
+    , reset
+    , rotateLeft
+    , rotateRight
+    , set
+    , setWith
+    , shiftLeft
+    , shiftLeftBy
+    , shiftRight
+    , shiftRightZf
+    , sub
+    , subc
+    , swap
+    , toInt
+    , xor
+    , zero
+    )
 
 import Bitwise
 import Carry exposing (Carry)
@@ -260,6 +259,7 @@ setWith : Int -> Bool -> Byte -> Byte
 setWith n shouldSet byte =
     if shouldSet then
         set n byte
+
     else
         reset n byte
 

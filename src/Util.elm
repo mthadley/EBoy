@@ -1,4 +1,4 @@
-module Util exposing (..)
+module Util exposing (clone, cloneWith, toInt)
 
 {-| Various utility funcitons.
 -}
@@ -10,6 +10,7 @@ toInt : Bool -> Int
 toInt bool =
     if bool then
         1
+
     else
         0
 

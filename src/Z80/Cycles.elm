@@ -1,4 +1,4 @@
-module Z80.Cycles exposing (..)
+module Z80.Cycles exposing (Cycles(..))
 
 {-| Represents how many cycles an intruction will take. Some
 have two values since they are branching (`JR`, `JRNZ`, etc.).

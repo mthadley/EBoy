@@ -1,10 +1,10 @@
-module Test.Z80.MMU exposing (..)
+module Tests.Z80.MMU exposing (invalidROM, loadROM, mbc1ROM, mbc2ROM, mockROM, ramDisableByte, readByte, suite, writeByte)
 
 import Byte exposing (Byte)
 import Expect
 import Fuzz exposing (Fuzzer, int)
 import Test exposing (Test, describe, fuzz, test)
-import Test.Util exposing (byte, expectOk)
+import Tests.Util exposing (byte, expectOk)
 import Word
 import Z80.MMU as MMU exposing (MMU)
 
@@ -216,6 +216,7 @@ ramDisableByte =
         (\b ->
             if b == MMU.ramEnableVal then
                 Byte.inc b
+
             else
                 b
         )

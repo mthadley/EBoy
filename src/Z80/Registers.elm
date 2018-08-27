@@ -1,4 +1,4 @@
-module Z80.Registers exposing (..)
+module Z80.Registers exposing (ByteRegister(..), WordRegister(..))
 
 {-| The registers of the Z80.
 -}

@@ -1,5 +1,6 @@
-module Main exposing (..)
+module Main exposing (main)
 
+import Browser exposing (Document)
 import Byte exposing (Byte)
 import Html exposing (..)
 import Html.Attributes as Attr
@@ -12,6 +13,7 @@ import Z80.Registers exposing (..)
 import Z80.State as State exposing (State)
 
 
+
 -- Model
 
 
@@ -21,17 +23,26 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    Model State.init False ! []
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( Model State.init False
+    , Cmd.none
+    )
 
 
 
 -- View
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
+    { body = [ viewMain model ]
+    , title = "Eboy"
+    }
+
+
+viewMain : Model -> Html Msg
+viewMain model =
     main_ []
         [ viewRegisterTable model.state
         , viewStateTable model.state
@@ -41,6 +52,7 @@ view model =
             [ button [ onClick ToggleRun ]
                 [ if model.running then
                     text "Halt"
+
                   else
                     text "Run"
                 ]
@@ -53,7 +65,7 @@ viewStateTable state =
     table []
         [ tr []
             [ th [] [ text "Clock" ]
-            , td [] [ text <| toString <| state.clock ]
+            , td [] [ text <| String.fromInt <| state.clock ]
             ]
         , tr []
             [ th [] [ text "Instruction" ]
@@ -68,7 +80,7 @@ viewInstruction state =
         |> State.readMemRegister PC
         |> decode
         |> Tuple.first
-        |> toString
+        |> Debug.toString
         |> text
 
 
@@ -126,21 +138,23 @@ viewWord =
 
 
 intToHex : Int -> Int -> String
-intToHex pad int =
+intToHex pad val =
     let
         helper int str =
             if int == 0 then
                 String.padLeft pad '0' str
+
             else
-                helper (int // 16) <| (digitToHex <| int % 16) ++ str
+                helper (int // 16) <| (digitToHex <| modBy 16 int) ++ str
     in
-    helper int ""
+    helper val ""
 
 
 digitToHex : Int -> String
 digitToHex int =
     if int < 10 then
-        toString int
+        String.fromInt int
+
     else
         case int of
             10 ->
@@ -180,22 +194,31 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Reset ->
-            { model | state = State.init } ! []
+            ( { model | state = State.init }
+            , Cmd.none
+            )
 
         Next ->
-            { model | state = Z80.next model.state } ! []
+            ( { model | state = Z80.next model.state }
+            , Cmd.none
+            )
 
         ToggleRun ->
-            { model | running = not model.running } ! []
+            ( { model | running = not model.running }
+            , Cmd.none
+            )
 
         Run ->
-            { model | state = run model.state } ! []
+            ( { model | state = run model.state }
+            , Cmd.none
+            )
 
 
 run : State -> State
 run state =
     if state.clock < 17556 then
         run <| Z80.next state
+
     else
         { state | clock = 0 }
 
@@ -203,7 +226,8 @@ run state =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     if model.running then
-        Time.every Time.millisecond (always Run)
+        Time.every 1 (always Run)
+
     else
         Sub.none
 
@@ -212,9 +236,9 @@ subscriptions model =
 -- Main
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    program
+    Browser.document
         { init = init
         , update = update
         , view = view

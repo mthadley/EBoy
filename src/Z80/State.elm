@@ -1,9 +1,49 @@
-module Z80.State exposing (..)
+module Z80.State exposing
+    ( State
+    , addByteSigned
+    , addPC
+    , addPCSigned
+    , addSP
+    , decSP
+    , enableInterrupts
+    , getFlagByte
+    , incPC
+    , incSP
+    , init
+    , popSP
+    , pushSP
+    , pushSPWord
+    , readByteRegister
+    , readDataByte
+    , readDataWord
+    , readMemDataOffset
+    , readMemRegister
+    , readMemRegisterOffset
+    , readMemWordRegister
+    , readWordRegister
+    , resetFlag
+    , resetFlags
+    , setAccFlags
+    , setCarryFlags
+    , setFlag
+    , setFlags
+    , setFlagsWith
+    , setIncFlags
+    , setZeroFlag
+    , updateClock
+    , updateFlags
+    , wordOffset
+    , writeByteRegister
+    , writeMemByte
+    , writeMemRegister
+    , writeMemRegisterWord
+    , writeMemWord
+    , writeWordRegister
+    )
 
 {-| Machine State and various functions that can be used to modify it.
 -}
 
-import Basics.Extra exposing ((=>))
 import Byte exposing (Byte)
 import Carry exposing (Carry)
 import Util
@@ -245,6 +285,7 @@ updateClock cycles state =
                 c =
                     if state.jump then
                         taken
+
                     else
                         notTaken
             in
@@ -274,6 +315,7 @@ addByteSigned byte =
         sign =
             if Byte.msbSet byte then
                 -1
+
             else
                 1
 
@@ -362,35 +404,34 @@ setFlagsWith flags =
     updateFlags <| Flag.setWith flags
 
 
-setAccFlags : Carry Byte -> State -> State
-setAccFlags result state =
+setAccFlags : ( Carry Byte, State ) -> State
+setAccFlags ( result, state ) =
     setCarryFlags result <|
         setFlagsWith
-            [ Flag.Zero => (Byte.isZero <| Carry.value <| result)
-            ]
+            [ ( Flag.Zero, Byte.isZero <| Carry.value <| result ) ]
             state
 
 
 setCarryFlags : Carry a -> State -> State
 setCarryFlags result =
     setFlagsWith
-        [ Flag.Carry => Carry.check result
-        , Flag.HalfCarry => Carry.checkHalf result
+        [ ( Flag.Carry, Carry.check result )
+        , ( Flag.HalfCarry, Carry.checkHalf result )
         ]
 
 
 setIncFlags : Carry Byte -> State -> State
 setIncFlags result =
     setFlagsWith
-        [ Flag.HalfCarry => Carry.checkHalf result
-        , Flag.Zero => (Byte.isZero <| Carry.value <| result)
+        [ ( Flag.HalfCarry, Carry.checkHalf result )
+        , ( Flag.Zero, Byte.isZero <| Carry.value <| result )
         ]
 
 
 setZeroFlag : Byte -> State -> State
 setZeroFlag byte =
     setFlagsWith
-        [ Flag.Zero => Byte.isZero byte
+        [ ( Flag.Zero, Byte.isZero byte )
         ]
 
 

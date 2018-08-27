@@ -1,9 +1,8 @@
-module Test.Z80 exposing (..)
+module Tests.Z80 exposing (fuzzFlags, suite, tests)
 
-import Basics.Extra exposing ((=>))
 import Fuzz exposing (bool, int)
-import Test exposing (Test, describe, fuzz, fuzz4, test)
-import Test.Util exposing (..)
+import Test exposing (Test, describe, fuzz, test)
+import Tests.Util exposing (..)
 import Z80.Flag exposing (Flag(..))
 import Z80.Mode as Mode
 import Z80.Registers exposing (..)
@@ -29,10 +28,10 @@ tests =
         |> expectWord DE 0x00
         |> expectWord AF 0x00
         |> expectFlags
-            [ Carry => False
-            , Zero => False
-            , Subtract => False
-            , HalfCarry => False
+            [ ( Carry, False )
+            , ( Zero, False )
+            , ( Subtract, False )
+            , ( HalfCarry, False )
             ]
     , withCode [ 0x01, 0x01, 0x02 ]
         |> expectByte B 0x02
@@ -81,7 +80,7 @@ tests =
     , withCode [ 0x0F ]
         |> withByte A 0x11
         |> expectByte A 0x88
-        |> expectFlags [ Carry => True ]
+        |> expectFlags [ ( Carry, True ) ]
     , withCode [ 0x10 ]
         |> expectMode Mode.Stopped
     , withCode [ 0x11, 0x44, 0x22 ]
@@ -105,7 +104,7 @@ tests =
     , withCode [ 0x17 ]
         |> withByte A 0x81
         |> expectByte A 0x02
-        |> expectFlags [ Carry => True ]
+        |> expectFlags [ ( Carry, True ) ]
     , withCode [ 0x18, 0x23 ]
         |> expectWord PC 0x25
     , withCode [ 0x19 ]
@@ -131,7 +130,7 @@ tests =
         |> withByte A 0x40
         |> expectByte A 0x20
     , withCode [ 0x20, 0x04 ]
-        |> withFlags [ Zero => False ]
+        |> withFlags [ ( Zero, False ) ]
         |> expectWord PC 0x06
     , withCode [ 0x21, 0x04, 0x06 ]
         |> expectWord HL 0x0604
@@ -154,7 +153,7 @@ tests =
         |> withByte A 0x0F
         |> expectByte A 0x15
     , withCode [ 0x28, 0x04 ]
-        |> withFlags [ Zero => True ]
+        |> withFlags [ ( Zero, True ) ]
         |> expectWord PC 0x06
     , withCode [ 0x29 ]
         |> withWord HL 0x06
@@ -167,10 +166,10 @@ tests =
     , withCode [ 0x2B ]
         |> expectWord HL 0xFFFF
         |> expectFlags
-            [ Carry => False
-            , Zero => False
-            , Subtract => False
-            , HalfCarry => False
+            [ ( Carry, False )
+            , ( Zero, False )
+            , ( Subtract, False )
+            , ( HalfCarry, False )
             ]
     , withCode [ 0x2C ]
         |> expectByte L 0x01
@@ -182,7 +181,7 @@ tests =
         |> withByte A 0x55
         |> expectByte A 0xAA
     , withCode [ 0x30, 0x13 ]
-        |> withFlags [ Carry => False ]
+        |> withFlags [ ( Carry, False ) ]
         |> expectWord PC 0x15
     , withCode [ 0x31, 0x24, 0x36 ]
         |> expectWord SP 0x3624
@@ -204,12 +203,12 @@ tests =
         |> expectMem 0xC004 0x34
     , withCode [ 0x37 ]
         |> expectFlags
-            [ Subtract => False
-            , HalfCarry => False
-            , Carry => True
+            [ ( Subtract, False )
+            , ( HalfCarry, False )
+            , ( Carry, True )
             ]
     , withCode [ 0x38, 0x06 ]
-        |> withFlags [ Carry => True ]
+        |> withFlags [ ( Carry, True ) ]
         |> expectWord PC 0x08
     , withCode [ 0x39 ]
         |> withWord HL 0x23
@@ -228,11 +227,11 @@ tests =
     , withCode [ 0x3E, 0x32 ]
         |> expectByte A 0x32
     , withCode [ 0x3F ]
-        |> withFlags [ Carry => False ]
+        |> withFlags [ ( Carry, False ) ]
         |> expectFlags
-            [ Subtract => False
-            , HalfCarry => False
-            , Carry => True
+            [ ( Subtract, False )
+            , ( HalfCarry, False )
+            , ( Carry, True )
             ]
     , withCode [ 0x40 ]
         |> expectByte B 0x00
@@ -443,10 +442,10 @@ suite =
                     |> withByte A 0x02
                     |> expectByte A 0x01
                     |> expectFlags
-                        [ Carry => False
-                        , Zero => False
-                        , Subtract => False
-                        , HalfCarry => False
+                        [ ( Carry, False )
+                        , ( Zero, False )
+                        , ( Subtract, False )
+                        , ( HalfCarry, False )
                         ]
                 )
             , runTest "Should always reset zero flag"
@@ -454,10 +453,10 @@ suite =
                     |> withByte A 0x00
                     |> expectByte A 0x00
                     |> expectFlags
-                        [ Carry => False
-                        , Zero => False
-                        , Subtract => False
-                        , HalfCarry => False
+                        [ ( Carry, False )
+                        , ( Zero, False )
+                        , ( Subtract, False )
+                        , ( HalfCarry, False )
                         ]
                 )
             ]
@@ -467,8 +466,8 @@ suite =
                     |> withByte A 0x01
                     |> expectByte A 0x02
                     |> expectFlags
-                        [ Carry => False
-                        , Zero => False
+                        [ ( Carry, False )
+                        , ( Zero, False )
                         ]
                 )
             , runTest "Should set zero flag if result is zero"
@@ -476,8 +475,8 @@ suite =
                     |> withByte A 0x80
                     |> expectByte A 0x00
                     |> expectFlags
-                        [ Carry => True
-                        , Zero => True
+                        [ ( Carry, True )
+                        , ( Zero, True )
                         ]
                 )
             ]
@@ -487,46 +486,46 @@ suite =
                     |> withByte A 0x01
                     |> expectByte A 0x00
                     |> expectFlags
-                        [ Carry => True
-                        , Zero => False
-                        , Subtract => False
-                        , HalfCarry => False
+                        [ ( Carry, True )
+                        , ( Zero, False )
+                        , ( Subtract, False )
+                        , ( HalfCarry, False )
                         ]
                 )
             , runTest "Carry should be new significant bit"
                 (withCode [ 0x1F ]
-                    |> withFlags [ Carry => True ]
+                    |> withFlags [ ( Carry, True ) ]
                     |> expectByte A 0x80
                     |> expectFlags
-                        [ Carry => False
-                        , Zero => False
-                        , Subtract => False
-                        , HalfCarry => False
+                        [ ( Carry, False )
+                        , ( Zero, False )
+                        , ( Subtract, False )
+                        , ( HalfCarry, False )
                         ]
                 )
             ]
         , describe "JR"
             [ runTest "NZ, Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
-                    |> withFlags [ Zero => False ]
+                    |> withFlags [ ( Zero, False ) ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
                 )
             , runTest "NZ, Should not jump"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x20, 0x84 ]
-                    |> withFlags [ Zero => True ]
+                    |> withFlags [ ( Zero, True ) ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x06
                 )
             , runTest "Z, Should add signed data to PC"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
-                    |> withFlags [ Zero => True ]
+                    |> withFlags [ ( Zero, True ) ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x02
                 )
             , runTest "Z, Should not jump"
                 (withCode [ 0x00, 0x00, 0x00, 0x00, 0x28, 0x84 ]
-                    |> withFlags [ Zero => False ]
+                    |> withFlags [ ( Zero, False ) ]
                     |> withWord PC 0x04
                     |> expectWord PC 0x06
                 )
@@ -559,8 +558,8 @@ suite =
                     |> withByte A 0x55
                     |> expectByte A 0xAA
                     |> expectFlags
-                        [ Subtract => True
-                        , HalfCarry => True
+                        [ ( Subtract, True )
+                        , ( HalfCarry, True )
                         ]
                 )
             , runFuzz int "Should always set Subtract and HalfCarry flags" <|
@@ -568,25 +567,25 @@ suite =
                     withCode [ 0x2F ]
                         |> withByte A val
                         |> expectFlags
-                            [ Subtract => True
-                            , HalfCarry => True
+                            [ ( Subtract, True )
+                            , ( HalfCarry, True )
                             ]
             ]
         , describe "SCF"
             [ fuzzFlags "Should set carry flag" <|
-                \subtract halfCarry carry zero ->
+                \{ zero, subtract, halfCarry, carry } ->
                     withCode [ 0x37 ]
                         |> withFlags
-                            [ Subtract => subtract
-                            , HalfCarry => halfCarry
-                            , Carry => carry
-                            , Zero => zero
+                            [ ( Subtract, subtract )
+                            , ( HalfCarry, halfCarry )
+                            , ( Carry, carry )
+                            , ( Zero, zero )
                             ]
                         |> expectFlags
-                            [ Subtract => False
-                            , HalfCarry => False
-                            , Carry => True
-                            , Zero => zero
+                            [ ( Subtract, False )
+                            , ( HalfCarry, False )
+                            , ( Carry, True )
+                            , ( Zero, zero )
                             ]
             ]
         , describe "INC"
@@ -594,12 +593,12 @@ suite =
                 \carry ->
                     withCode [ 0x3C ]
                         |> withFlags
-                            [ Carry => carry
-                            , Subtract => True
+                            [ ( Carry, carry )
+                            , ( Subtract, True )
                             ]
                         |> expectFlags
-                            [ Carry => carry
-                            , Subtract => False
+                            [ ( Carry, carry )
+                            , ( Subtract, False )
                             ]
             ]
         , describe "DEC"
@@ -607,54 +606,64 @@ suite =
                 \carry ->
                     withCode [ 0x3D ]
                         |> withFlags
-                            [ Carry => carry
-                            , Subtract => False
+                            [ ( Carry, carry )
+                            , ( Subtract, False )
                             ]
                         |> expectFlags
-                            [ Carry => carry
-                            , Subtract => True
+                            [ ( Carry, carry )
+                            , ( Subtract, True )
                             ]
             ]
         , describe "CCF"
             [ fuzzFlags "Should complement carry flag" <|
-                \zero subtract halfCarry carry ->
+                \{ zero, subtract, halfCarry, carry } ->
                     withCode [ 0x3F ]
                         |> withFlags
-                            [ Subtract => subtract
-                            , HalfCarry => halfCarry
-                            , Carry => carry
-                            , Zero => zero
+                            [ ( Subtract, subtract )
+                            , ( HalfCarry, halfCarry )
+                            , ( Carry, carry )
+                            , ( Zero, zero )
                             ]
                         |> expectFlags
-                            [ Subtract => False
-                            , HalfCarry => False
-                            , Carry => not carry
-                            , Zero => zero
+                            [ ( Subtract, False )
+                            , ( HalfCarry, False )
+                            , ( Carry, not carry )
+                            , ( Zero, zero )
                             ]
             ]
         , describe "LD"
             [ fuzzFlags "Should not change any flags" <|
-                \zero subtract halfCarry carry ->
+                \{ zero, subtract, halfCarry, carry } ->
                     withCode [ 0x41 ]
                         |> withFlags
-                            [ Subtract => subtract
-                            , HalfCarry => halfCarry
-                            , Carry => carry
-                            , Zero => zero
+                            [ ( Subtract, subtract )
+                            , ( HalfCarry, halfCarry )
+                            , ( Carry, carry )
+                            , ( Zero, zero )
                             ]
                         |> expectFlags
-                            [ Subtract => subtract
-                            , HalfCarry => halfCarry
-                            , Carry => carry
-                            , Zero => zero
+                            [ ( Subtract, subtract )
+                            , ( HalfCarry, halfCarry )
+                            , ( Carry, carry )
+                            , ( Zero, zero )
                             ]
             ]
         ]
 
 
-fuzzFlags :
-    String
-    -> (Bool -> Bool -> Bool -> Bool -> Unit)
-    -> Test
+type alias Flags =
+    { zero : Bool
+    , subtract : Bool
+    , halfCarry : Bool
+    , carry : Bool
+    }
+
+
+fuzzFlags : String -> (Flags -> Unit) -> Test
 fuzzFlags =
-    runFuzz4 bool bool bool bool
+    Fuzz.constant Flags
+        |> Fuzz.andMap bool
+        |> Fuzz.andMap bool
+        |> Fuzz.andMap bool
+        |> Fuzz.andMap bool
+        |> runFuzz
